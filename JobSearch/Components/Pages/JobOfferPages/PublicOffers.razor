@@ -21,6 +21,7 @@
                 <InputSelect id="employmentTypeFilter" @bind-Value="employmentTypeFilter" class="form-select">
                     <option value="">Wszystkie</option>
                     @foreach (var type in Enum.GetValues(typeof(EmploymentType)))
+
                     {
                         <option value="@type">@type</option>
                     }
@@ -31,6 +32,7 @@
                 <InputSelect id="jobTypeFilter" @bind-Value="jobTypeFilter" class="form-select">
                     <option value="">Wszystkie</option>
                     @foreach (var type in Enum.GetValues(typeof(JobType)))
+
                     {
                         <option value="@type">@type</option>
                     }
@@ -62,26 +64,43 @@
 
 
 @if (jobOffers == null)
+
 {
     <p><em>Ładowanie...</em></p>
 }
+
 else if (!jobOffers.Any())
+
 {
     <div class="alert alert-info">Brak ofert pracy spełniających podane kryteria.</div>
 }
+
 else
+
 {
     <div class="row row-cols-1 row-cols-md-2 g-4">
         @foreach (var offer in jobOffers)
+
         {
             <div class="col">
                 <div class="card h-100">
                     <div class="card-body">
                         <h5 class="card-title">@offer.Title</h5>
                         <h6 class="card-subtitle mb-2 text-muted">@offer.CompanyName</h6>
+
                         <p class="card-text">
                             <strong>Lokalizacja:</strong> @offer.Location<br />
-                            <strong>Wynagrodzenie:</strong> @offer.SalaryRange
+                            <strong>Wynagrodzenie:</strong> @offer.SalaryRange<br />
+
+                            <strong>Wygasa: </strong>
+                            @if (offer.ApplicationDeadline.HasValue)
+                            {
+                                <span class="text-danger fw-bold">@offer.ApplicationDeadline.Value.ToShortDateString()</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Bezterminowo</span>
+                            }
                         </p>
                         <a href="@($"/offer/{offer.Id}")" class="btn btn-secondary btn-sm">Zobacz szczegóły i aplikuj</a>
                     </div>
@@ -97,42 +116,77 @@ else
 @code {
     private List<JobOffer>? jobOffers;
 
+
+
     private string? locationFilter;
+
     private decimal? minSalaryFilter;
+
     private string sortBy = "date_desc";
+
     private EmploymentType? employmentTypeFilter;
+
     private JobType? jobTypeFilter;
 
+
+
     protected override async Task OnInitializedAsync()
+
     {
+
         await LoadOffers();
+
     }
+
+
 
     private async Task ApplyFilters()
+
     {
+
         await LoadOffers();
+
     }
+
+
 
     private async Task ClearFilters()
+
     {
+
         locationFilter = null;
+
         minSalaryFilter = null;
+
         employmentTypeFilter = null;
+
         jobTypeFilter = null;
+
         sortBy = "date_desc";
+
         await LoadOffers();
+
     }
 
+
+
     private async Task LoadOffers()
+
     {
-        // 1. Pobierz oferty z serwisu (serwis zwróci WSZYSTKO dla Admina/Moda)
+
         var offersFromService = await JobOfferService.GetJobOffersAsync(locationFilter, minSalaryFilter, sortBy, employmentTypeFilter, jobTypeFilter);
 
-        // 2. RĘCZNIE filtrujemy na tej stronie, aby pokazać tylko Opublikowane
+
+
         jobOffers = offersFromService
+
             .Where(o => o.Status == OfferStatus.Opublikowana)
+
             .ToList();
 
+
+
         StateHasChanged();
+
     }
 }

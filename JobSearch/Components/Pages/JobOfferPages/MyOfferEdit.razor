@@ -14,54 +14,59 @@
 <PageTitle>Edytuj Ofertę</PageTitle>
 
 <h1>Edytuj Ofertę</h1>
-
-<h2>JobOffer</h2>
 <hr />
 @if (JobOffer is null)
+
 {
     <p><em>Ładowanie...</em></p>
 }
+
 else
+
 {
     <div class="row">
         <div class="col-md-4">
             <EditForm method="post" Model="JobOffer" OnValidSubmit="UpdateJobOffer" FormName="edit" Enhance>
                 <DataAnnotationsValidator />
-                <ValidationSummary role="alert" />
+                <ValidationSummary class="text-danger" role="alert" />
                 <input type="hidden" name="JobOffer.Id" value="@JobOffer.Id" />
 
                 <div class="mb-3">
-                    <label for="title" class="form-label">Title:</label>
-                    <InputText id="title" @bind-Value="JobOffer.Title" class="form-control" aria-required="true" />
+                    <label for="nip" class="form-label">NIP Firmy (nieedytowalny):</label>
+                    <InputText id="nip" @bind-Value="JobOffer.Nip" class="form-control" ReadOnly="true" />
+                </div>
+                <div class="mb-3">
+                    <label for="companyname" class="form-label">Nazwa firmy (nieedytowalna):</label>
+                    <InputText id="companyname" @bind-Value="JobOffer.CompanyName" class="form-control" ReadOnly="true" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="title" class="form-label">Tytuł stanowiska:</label>
+                    <InputText id="title" @bind-Value="JobOffer.Title" class="form-control" aria-required="true" maxlength="80" />
                     <ValidationMessage For="() => JobOffer.Title" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="description" class="form-label">Description:</label>
-                    <InputTextArea id="description" @bind-Value="JobOffer.Description" class="form-control" rows="5" aria-required="true" />
+                    <label for="description" class="form-label">Opis stanowiska:</label>
+                    <InputTextArea id="description" @bind-Value="JobOffer.Description" class="form-control" rows="5" aria-required="true" maxlength="500" />
                     <ValidationMessage For="() => JobOffer.Description" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="companyname" class="form-label">CompanyName:</label>
-                    <InputText id="companyname" @bind-Value="JobOffer.CompanyName" class="form-control" aria-required="true" />
-                    <ValidationMessage For="() => JobOffer.CompanyName" class="text-danger" />
-                </div>
-                <div class="mb-3">
-                    <label for="location" class="form-label">Location:</label>
-                    <InputText id="location" @bind-Value="JobOffer.Location" class="form-control" aria-required="true" />
+                    <label for="location" class="form-label">Lokalizacja:</label>
+                    <InputText id="location" @bind-Value="JobOffer.Location" class="form-control" aria-required="true" maxlength="100" />
                     <ValidationMessage For="() => JobOffer.Location" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="contactinfo" class="form-label">ContactInfo:</label>
-                    <InputText id="contactinfo" @bind-Value="JobOffer.ContactInfo" class="form-control" aria-required="true" />
+                    <label for="contactinfo" class="form-label">Email kontaktowy (do aplikacji):</label>
+                    <InputText id="contactinfo" @bind-Value="JobOffer.ContactInfo" class="form-control" aria-required="true" maxlength="250" />
                     <ValidationMessage For="() => JobOffer.ContactInfo" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="applicationdeadline" class="form-label">ApplicationDeadline:</label>
-                    <InputDate id="applicationdeadline" @bind-Value="JobOffer.ApplicationDeadline" class="form-control" />
+                    <label for="applicationdeadline" class="form-label">Ważna do (opcjonalnie):</label>
+                    <InputDate id="applicationdeadline" @bind-Value="JobOffer.ApplicationDeadline" class="form-control" min="@today" />
                     <ValidationMessage For="() => JobOffer.ApplicationDeadline" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="empltype" class="form-label">EmplType:</label>
+                    <label for="empltype" class="form-label">Rodzaj zatrudnienia:</label>
                     <InputSelect id="empltype" @bind-Value="JobOffer.EmplType" class="form-control" aria-required="true">
                         @foreach (var value in Enum.GetValues(typeof(EmploymentType)))
                         {
@@ -71,7 +76,7 @@ else
                     <ValidationMessage For="() => JobOffer.EmplType" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="jobtype" class="form-label">JobType:</label>
+                    <label for="jobtype" class="form-label">Tryb pracy:</label>
                     <InputSelect id="jobtype" @bind-Value="JobOffer.JobType" class="form-control" aria-required="true">
                         @foreach (var value in Enum.GetValues(typeof(JobType)))
                         {
@@ -81,23 +86,23 @@ else
                     <ValidationMessage For="() => JobOffer.JobType" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="salarymin" class="form-label">SalaryMin:</label>
+                    <label for="salarymin" class="form-label">Wynagrodzenie (min):</label>
                     <InputNumber id="salarymin" @bind-Value="JobOffer.SalaryMin" class="form-control" />
                     <ValidationMessage For="() => JobOffer.SalaryMin" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="salarymax" class="form-label">SalaryMax:</label>
+                    <label for="salarymax" class="form-label">Wynagrodzenie (max):</label>
                     <InputNumber id="salarymax" @bind-Value="JobOffer.SalaryMax" class="form-control" />
                     <ValidationMessage For="() => JobOffer.SalaryMax" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="requirements" class="form-label">Requirements:</label>
-                    <InputTextArea id="requirements" @bind-Value="JobOffer.Requirements" class="form-control" rows="5" aria-required="true" />
+                    <label for="requirements" class="form-label">Wymagania:</label>
+                    <InputTextArea id="requirements" @bind-Value="JobOffer.Requirements" class="form-control" rows="5" aria-required="true" maxlength="500" />
                     <ValidationMessage For="() => JobOffer.Requirements" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="benefits" class="form-label">Benefits:</label>
-                    <InputText id="benefits" @bind-Value="JobOffer.Benefits" class="form-control" />
+                    <label for="benefits" class="form-label">Benefity (opcjonalnie):</label>
+                    <InputText id="benefits" @bind-Value="JobOffer.Benefits" class="form-control" maxlength="200" />
                     <ValidationMessage For="() => JobOffer.Benefits" class="text-danger" />
                 </div>
                 <button type="submit" class="btn btn-primary">Zapisz i wyślij do weryfikacji</button>
@@ -112,43 +117,74 @@ else
 
 @code {
     [Parameter]
+
     public int Id { get; set; }
 
+
+
     [SupplyParameterFromForm]
+
     private JobOffer? JobOffer { get; set; }
+
+
 
     private string? currentUserId;
 
+    private string today = DateTime.Now.ToString("yyyy-MM-dd");
+
+
+
     protected override async Task OnParametersSetAsync()
+
     {
+
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
         currentUserId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
+
+
         if (string.IsNullOrEmpty(currentUserId))
+
         {
+
             NavigationManager.NavigateTo("Account/Login");
+
             return;
+
         }
+
+
 
         JobOffer ??= await JobOfferService.GetByIdAsync(Id);
 
+
+
         if (JobOffer is null || JobOffer.CreatedByUserId != currentUserId)
+
         {
-            NavigationManager.NavigateTo("/my-offers"); // Błąd lub brak uprawnień
+
+            NavigationManager.NavigateTo("/my-offers");
+
             return;
+
         }
+
     }
 
+
+
     private async Task UpdateJobOffer()
+
     {
+
         if (JobOffer is null) return;
 
-        // Serwis JobOfferService (UpdateAsync) zajmie się resztą:
-        // 1. Sprawdzi uprawnienia (isOwner)
-        // 2. Automatycznie cofnie status do "Weryfikacja"
-        // 3. Zapisze log audytu
+
 
         await JobOfferService.UpdateAsync(JobOffer);
+
         NavigationManager.NavigateTo("/my-offers");
+
     }
 }

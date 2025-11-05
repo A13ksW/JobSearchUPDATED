@@ -28,7 +28,7 @@ else
         <div class="col-md-4">
             <EditForm method="post" Model="JobOffer" OnValidSubmit="UpdateJobOffer" FormName="edit" Enhance>
                 <DataAnnotationsValidator />
-                <ValidationSummary role="alert" />
+                <ValidationSummary class="text-danger" role="alert" />
                 <input type="hidden" name="JobOffer.Id" value="@JobOffer.Id" />
 
                 <div class="mb-3 p-3 border border-warning rounded">
@@ -52,28 +52,32 @@ else
                 </div>
 
                 <div class="mb-3">
+                    <label for="nip" class="form-label">NIP Firmy (nieedytowalny):</label>
+                    <InputText id="nip" @bind-Value="JobOffer.Nip" class="form-control" ReadOnly="true" />
+                </div>
+                <div class="mb-3">
+                    <label for="companyname" class="form-label">Nazwa firmy (nieedytowalna):</label>
+                    <InputText id="companyname" @bind-Value="JobOffer.CompanyName" class="form-control" ReadOnly="true" />
+                </div>
+
+                <div class="mb-3">
                     <label for="title" class="form-label">Title:</label>
-                    <InputText id="title" @bind-Value="JobOffer.Title" class="form-control" aria-required="true" />
+                    <InputText id="title" @bind-Value="JobOffer.Title" class="form-control" aria-required="true" maxlength="80" />
                     <ValidationMessage For="() => JobOffer.Title" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="description" class="form-label">Description:</label>
-                    <InputText id="description" @bind-Value="JobOffer.Description" class="form-control" aria-required="true" />
+                    <InputTextArea id="description" @bind-Value="JobOffer.Description" class="form-control" rows="5" aria-required="true" maxlength="500" />
                     <ValidationMessage For="() => JobOffer.Description" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="companyname" class="form-label">CompanyName:</label>
-                    <InputText id="companyname" @bind-Value="JobOffer.CompanyName" class="form-control" aria-required="true" />
-                    <ValidationMessage For="() => JobOffer.CompanyName" class="text-danger" />
-                </div>
-                <div class="mb-3">
                     <label for="location" class="form-label">Location:</label>
-                    <InputText id="location" @bind-Value="JobOffer.Location" class="form-control" aria-required="true" />
+                    <InputText id="location" @bind-Value="JobOffer.Location" class="form-control" aria-required="true" maxlength="100" />
                     <ValidationMessage For="() => JobOffer.Location" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="contactinfo" class="form-label">ContactInfo:</label>
-                    <InputText id="contactinfo" @bind-Value="JobOffer.ContactInfo" class="form-control" aria-required="true" />
+                    <InputText id="contactinfo" @bind-Value="JobOffer.ContactInfo" class="form-control" aria-required="true" maxlength="250" />
                     <ValidationMessage For="() => JobOffer.ContactInfo" class="text-danger" />
                 </div>
                 <div class="mb-3">
@@ -83,7 +87,7 @@ else
                 </div>
                 <div class="mb-3">
                     <label for="applicationdeadline" class="form-label">ApplicationDeadline:</label>
-                    <InputDate id="applicationdeadline" @bind-Value="JobOffer.ApplicationDeadline" class="form-control" />
+                    <InputDate id="applicationdeadline" @bind-Value="JobOffer.ApplicationDeadline" class="form-control" min="@today" />
                     <ValidationMessage For="() => JobOffer.ApplicationDeadline" class="text-danger" />
                 </div>
                 <div class="mb-3">
@@ -118,12 +122,12 @@ else
                 </div>
                 <div class="mb-3">
                     <label for="requirements" class="form-label">Requirements:</label>
-                    <InputText id="requirements" @bind-Value="JobOffer.Requirements" class="form-control" aria-required="true" />
+                    <InputTextArea id="requirements" @bind-Value="JobOffer.Requirements" class="form-control" rows="5" aria-required="true" maxlength="500" />
                     <ValidationMessage For="() => JobOffer.Requirements" class="text-danger" />
                 </div>
                 <div class="mb-3">
                     <label for="benefits" class="form-label">Benefits:</label>
-                    <InputText id="benefits" @bind-Value="JobOffer.Benefits" class="form-control" />
+                    <InputText id="benefits" @bind-Value="JobOffer.Benefits" class="form-control" maxlength="200" />
                     <ValidationMessage For="() => JobOffer.Benefits" class="text-danger" />
                 </div>
                 <button type="submit" class="btn btn-primary">Save</button>
@@ -146,6 +150,10 @@ else
     [SupplyParameterFromForm]
 
     private JobOffer? JobOffer { get; set; }
+
+
+
+    private string today = DateTime.Now.ToString("yyyy-MM-dd");
 
 
 

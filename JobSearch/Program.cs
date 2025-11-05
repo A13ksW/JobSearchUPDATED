@@ -48,6 +48,12 @@ builder.Services.AddDbContext<ApplicationDbContext>((sp, options) =>
 
 builder.Services.AddScoped<IJobOfferService, JobOfferService>();
 builder.Services.AddSingleton<INotificationService, NotificationService>();
+builder.Services.AddHostedService<ExpiredOfferService>();
+builder.Services.AddScoped<INipValidationService, NipValidationService>();
+builder.Services.AddHttpClient<INipValidationService, NipValidationService>(client =>
+{
+    client.BaseAddress = new Uri("https://wl-api.mf.gov.pl/");
+});
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
