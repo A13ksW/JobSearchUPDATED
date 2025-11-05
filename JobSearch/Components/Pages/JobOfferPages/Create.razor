@@ -1,0 +1,133 @@
+﻿@page "/joboffers/create"
+@using JobSearch.Data
+@using JobSearch.Services
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@inject NavigationManager NavigationManager
+@inject IJobOfferService JobOfferService
+@rendermode InteractiveServer
+@attribute [Authorize]
+
+<PageTitle>Stwórz nową ofertę</PageTitle>
+
+<h1>Stwórz nową ofertę</h1>
+<p>Po dodaniu, Twoja oferta zostanie przesłana do weryfikacji przez moderatora.</p>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="JobOffer" OnValidSubmit="AddJobOffer" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert" />
+            <div class="mb-3">
+                <label for="title" class="form-label">Tytuł stanowiska:</label>
+                <InputText id="title" @bind-Value="JobOffer.Title" class="form-control" aria-required="true" />
+                <ValidationMessage For="() => JobOffer.Title" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Opis stanowiska:</label>
+                <InputTextArea id="description" @bind-Value="JobOffer.Description" class="form-control" rows="5" aria-required="true" />
+                <ValidationMessage For="() => JobOffer.Description" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="companyname" class="form-label">Nazwa firmy:</label>
+                <InputText id="companyname" @bind-Value="JobOffer.CompanyName" class="form-control" aria-required="true" />
+                <ValidationMessage For="() => JobOffer.CompanyName" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="location" class="form-label">Lokalizacja:</label>
+                <InputText id="location" @bind-Value="JobOffer.Location" class="form-control" aria-required="true" placeholder="np. Warszawa lub Zdalnie" />
+                <ValidationMessage For="() => JobOffer.Location" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="contactinfo" class="form-label">Email kontaktowy (do aplikacji):</label>
+                <InputText id="contactinfo" @bind-Value="JobOffer.ContactInfo" class="form-control" aria-required="true" />
+                <ValidationMessage For="() => JobOffer.ContactInfo" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
+                <label for="applicationdeadline" class="form-label">Ważna do (opcjonalnie):</label>
+                <InputDate id="applicationdeadline" @bind-Value="JobOffer.ApplicationDeadline" class="form-control" />
+                <ValidationMessage For="() => JobOffer.ApplicationDeadline" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="empltype" class="form-label">Rodzaj zatrudnienia:</label>
+                <InputSelect id="empltype" @bind-Value="JobOffer.EmplType" class="form-control" aria-required="true">
+                    <option value="">-- Wybierz typ zatrudnienia --</option>
+                    @foreach (var type in Enum.GetValues(typeof(EmploymentType)).Cast<EmploymentType>())
+                    {
+                        <option value="@type">@type</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => JobOffer.EmplType" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="jobtype" class="form-label">Tryb pracy:</label>
+                <InputSelect id="jobtype" @bind-Value="JobOffer.JobType" class="form-control" aria-required="true">
+                    <option value="">-- Wybierz typ pracy --</option>
+                    @foreach (var type in Enum.GetValues(typeof(JobType)).Cast<JobType>())
+                    {
+                        <option value="@type">@type</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => JobOffer.JobType" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="salarymin" class="form-label">Wynagrodzenie (min):</label>
+                <InputNumber id="salarymin" @bind-Value="JobOffer.SalaryMin" class="form-control" />
+                <ValidationMessage For="() => JobOffer.SalaryMin" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="salarymax" class="form-label">Wynagrodzenie (max):</label>
+                <InputNumber id="salarymax" @bind-Value="JobOffer.SalaryMax" class="form-control" />
+                <ValidationMessage For="() => JobOffer.SalaryMax" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="requirements" class="form-label">Wymagania:</label>
+                <InputTextArea id="requirements" @bind-Value="JobOffer.Requirements" class="form-control" rows="5" aria-required="true" />
+                <ValidationMessage For="() => JobOffer.Requirements" class="text-danger" />
+            </div>
+            <div class="mb-3">
+                <label for="benefits" class="form-label">Benefity (opcjonalnie):</label>
+                <InputText id="benefits" @bind-Value="JobOffer.Benefits" class="form-control" />
+                <ValidationMessage For="() => JobOffer.Benefits" class="text-danger" />
+            </div>
+            <button type="submit" class="btn btn-primary">Wyślij do weryfikacji</button>
+        </EditForm>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a href="/my-offers">Anuluj</a>
+</div>
+
+@code {
+
+    [SupplyParameterFromForm]
+
+    private JobOffer JobOffer { get; set; } = new();
+
+
+
+    protected override void OnInitialized()
+
+    {
+
+        JobOffer.ApplicationDeadline = null;
+
+    }
+
+
+
+    private async Task AddJobOffer()
+
+    {
+
+        // Serwis automatycznie przypisze zalogowanego użytkownika jako CreatedByUserId
+
+        await JobOfferService.CreateAsync(JobOffer);
+
+        NavigationManager.NavigateTo("/my-offers"); // Wróć do listy moich ofert
+
+    }
+}

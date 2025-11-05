@@ -1,0 +1,505 @@
+﻿@page "/my-offers/details/{Id:int}"
+@rendermode InteractiveServer
+@using System.Security.Claims
+@using JobSearch.Data
+@using JobSearch.Services
+@using Microsoft.AspNetCore.Authorization
+@using System.ComponentModel.DataAnnotations
+@inject IJobOfferService JobOfferService
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@attribute [Authorize]
+
+<PageTitle>Zarządzaj Ofertą</PageTitle>
+
+<h3>Szczegóły Oferty Pracy</h3>
+
+@if (jobOffer == null)
+
+{
+    <p><em>Ładowanie...</em></p>
+}
+
+else
+
+{
+    <div class="card">
+        <div class="card-header">
+            <h4>@jobOffer.Title</h4>
+            <h6 class="text-muted">@jobOffer.CompanyName</h6>
+        </div>
+        <div class="card-body">
+
+            <div class="mb-3 p-3 border @GetStatusBorderClass(jobOffer.Status) rounded">
+                <h5 class="card-title">Status Oferty</h5>
+                <dl class="row">
+                    <dt class="col-sm-3">Aktualny status:</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge @GetStatusBadgeClass(jobOffer.Status)">@jobOffer.Status.ToString()</span>
+                    </dd>
+
+                    @if (jobOffer.Status == OfferStatus.Weryfikacja)
+                    {
+                        <dd class="col-sm-12 text-muted">Twoja oferta oczekuje na akceptację moderatora.</dd>
+                    }
+                    @if (jobOffer.Status == OfferStatus.Odrzucona && !string.IsNullOrEmpty(jobOffer.ModerationComment))
+                    {
+                        <dt class="col-sm-3 text-danger">Powód odrzucenia:</dt>
+                        <dd class="col-sm-9 text-danger">@jobOffer.ModerationComment</dd>
+                    }
+                </dl>
+            </div>
+
+            <h5 class="mt-4">Szczegóły ogłoszenia</h5>
+            <dl class="row">
+                <dt class="col-sm-3">Lokalizacja</dt>
+                <dd class="col-sm-9">@jobOffer.Location</dd>
+                <dt class="col-sm-3">Wynagrodzenie</dt>
+                <dd class="col-sm-9">@jobOffer.SalaryRange</dd>
+                <dt class="col-sm-3">Rodzaj zatrudnienia</dt>
+                <dd class="col-sm-9">@jobOffer.EmplType</dd>
+                <dt class="col-sm-3">Tryb pracy</dt>
+                <dd class="col-sm-9">@jobOffer.JobType</dd>
+            </dl>
+        </div>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-header">
+            <h4>Otrzymane Aplikacje (@applications.Count)</h4>
+        </div>
+        <div class="card-body">
+            @if (!applications.Any())
+
+            {
+                <div class="alert alert-info">Nie otrzymano jeszcze żadnych aplikacji na tę ofertę.</div>
+            }
+
+            else
+
+            {
+                <div class="list-group">
+                    @foreach (var app in applications)
+
+                    {
+                        <div class="list-group-item">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">@app.Applicant?.DisplayName</h5>
+                                <small>Aplikowano: @app.ApplicationDate.ToLocalTime().ToString("g")</small>
+                            </div>
+                            <small class="text-muted">@app.Applicant?.Email</small>
+
+                            <div class="mt-2">
+                                <span class="badge @GetApplicationStatusBadge(app.Status)">@app.Status.ToString()</span>
+                                @if (app.Status == ApplicationStatus.Zaproszony && !string.IsNullOrEmpty(app.EmployerContactPhone))
+
+                                {
+                                    <span class="ms-2 fw-bold text-success"><span class="bi bi-telephone-fill"></span> +48 @app.EmployerContactPhone</span>
+                                }
+                            </div>
+
+                            <div class="mt-2">
+                                <button class="btn btn-sm btn-outline-primary" @onclick="() => ToggleDetails(app.ApplicantId)">
+                                    @if (expandedApplicantId == app.ApplicantId)
+                                    {
+                                        <span>Ukryj szczegóły</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Zobacz szczegóły CV</span>
+                                    }
+                                </button>
+                            </div>
+
+                            @if (expandedApplicantId == app.ApplicantId)
+
+                            {
+                                <div class="mt-3 p-3 bg-light rounded border">
+                                    <h6>Profil kandydata:</h6>
+                                    @if (app.Applicant?.UserProfileCV == null)
+
+                                    {
+                                        <span class="text-muted">Kandydat nie utworzył jeszcze profilu CV.</span>
+                                    }
+
+                                    else
+
+                                    {
+                                        <dl class="row mb-0" style="font-size: 0.9rem;">
+                                            <dt class="col-sm-4">Doświadczenie:</dt>
+                                            <dd class="col-sm-8">@GetExperienceLabel(app.Applicant.UserProfileCV.ExperienceYears)</dd>
+
+                                            <dt class="col-sm-4">Edukacja:</dt>
+                                            <dd class="col-sm-8">@app.Applicant.UserProfileCV.EducationStatus - @app.Applicant.UserProfileCV.FieldOfStudy</dd>
+
+                                            <dt class="col-sm-4">Umiejętności:</dt>
+                                            <dd class="col-sm-8">
+                                                @string.Join(", ", app.Applicant.UserProfileCV.Skills.Select(s => s.SkillName))
+                                            </dd>
+
+                                            <dt class="col-sm-4">Języki:</dt>
+                                            <dd class="col-sm-8">
+                                                @string.Join(", ", app.Applicant.UserProfileCV.Languages.Select(l => $"{l.LanguageName} ({l.LanguageLevel})"))
+                                            </dd>
+
+                                            <dt class="col-sm-4">LinkedIn:</dt>
+                                            <dd class="col-sm-8"><a href="@app.Applicant.UserProfileCV.LinkedInUrl" target="_blank" rel="noopener noreferrer">Otwórz profil</a></dd>
+
+                                            <dt class="col-sm-4">Plik CV:</dt>
+                                            <dd class="col-sm-8"><a href="@app.Applicant.UserProfileCV.CvFileUrl" target="_blank" rel="noopener noreferrer">Pobierz</a></dd>
+                                        </dl>
+                                    }
+
+                                    <div class="mt-3 pt-3 border-top">
+                                        @if (app.Status == ApplicationStatus.Odrzucony)
+
+                                        {
+                                            <button class="btn btn-success" @onclick="() => ToggleInvite(app.Id)">
+                                                Zmień decyzję (Zaproś)
+                                            </button>
+                                        }
+
+                                        else if (app.Status == ApplicationStatus.Zaproszony)
+
+                                        {
+                                            <button class="btn btn-danger" @onclick="() => UpdateStatus(app, ApplicationStatus.Odrzucony, null)">
+                                                Odrzuć
+                                            </button>
+                                        }
+
+                                        else
+
+                                        {
+                                            <button class="btn btn-success" @onclick="() => ToggleInvite(app.Id)">
+                                                Zaproś na rozmowę
+                                            </button>
+                                            <button class="btn btn-danger" @onclick="() => UpdateStatus(app, ApplicationStatus.Odrzucony, null)">
+                                                Odrzuć
+                                            </button>
+                                        }
+
+                                        @if (inviteApplicationId == app.Id)
+
+                                        {
+                                            <EditForm Model="inviteInput" OnValidSubmit="() => UpdateStatus(app, ApplicationStatus.Zaproszony, inviteInput.PhoneNumber)" FormName="@($"invite-form-{app.Id}")" class="mt-3">
+                                                <DataAnnotationsValidator />
+                                                <div class="input-group">
+                                                    <span class="input-group-text">+48</span>
+                                                    <InputText @bind-Value="inviteInput.PhoneNumber" class="form-control" placeholder="Wpisz 9 cyfr..." />
+                                                    <button type="submit" class="btn btn-success">Zatwierdź</button>
+                                                </div>
+                                                <ValidationMessage For="() => inviteInput.PhoneNumber" class="text-danger" />
+                                            </EditForm>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<div class="mt-3">
+    <a href="/my-offers" class="btn btn-secondary">Powrót do listy moich ofert</a>
+</div>
+
+@code {
+    [Parameter]
+
+    public int Id { get; set; }
+
+
+
+    private JobOffer? jobOffer;
+
+    private List<JobApplication> applications = new();
+
+    private string? currentUserId;
+
+    private string? expandedApplicantId;
+
+
+
+    // --- ZMIANA: Model dla formularza zaproszenia ---
+
+    private int? inviteApplicationId;
+
+    private InviteModel inviteInput = new();
+
+
+
+    // --- NOWA KLASA: Wewnętrzny model do walidacji ---
+
+    public class InviteModel
+
+    {
+
+        [Required(ErrorMessage = "Numer telefonu jest wymagany.")]
+
+        [StringLength(9, MinimumLength = 9, ErrorMessage = "Numer musi składać się z 9 cyfr.")]
+
+        [RegularExpression("^[0-9]{9}$", ErrorMessage = "Numer musi składać się wyłącznie z cyfr.")]
+
+        public string? PhoneNumber { get; set; }
+
+    }
+
+    // --- KONIEC NOWEJ KLASY ---
+
+
+
+    protected override async Task OnInitializedAsync()
+
+    {
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+
+        currentUserId = authState.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+
+
+        if (string.IsNullOrEmpty(currentUserId))
+
+        {
+
+            NavigationManager.NavigateTo("Account/Login");
+
+            return;
+
+        }
+
+
+
+        jobOffer = await JobOfferService.GetByIdAsync(Id);
+
+
+
+        if (jobOffer == null || jobOffer.CreatedByUserId != currentUserId)
+
+        {
+
+            NavigationManager.NavigateTo("/my-offers");
+
+            return;
+
+        }
+
+
+
+        await LoadApplications();
+
+    }
+
+
+
+    private async Task LoadApplications()
+
+    {
+
+        applications = await JobOfferService.GetApplicationsForOfferAsync(Id);
+
+    }
+
+
+
+    private async Task UpdateStatus(JobApplication application, ApplicationStatus newStatus, string? phone)
+
+    {
+
+        if (string.IsNullOrEmpty(currentUserId)) return;
+
+
+
+        // Walidacja dla zaproszenia jest teraz obsługiwana przez EditForm
+
+        // Musimy tylko obsłużyć przypadki "Odrzuć"
+
+        if (newStatus == ApplicationStatus.Odrzucony)
+
+        {
+
+            phone = null; // Upewnij się, że telefon jest czyszczony przy odrzuceniu
+
+        }
+
+
+
+        try
+
+        {
+
+            await JobOfferService.UpdateApplicationStatusAsync(application.Id, newStatus, currentUserId, phone);
+
+
+
+            application.Status = newStatus;
+
+            application.EmployerContactPhone = phone;
+
+
+
+            inviteApplicationId = null;
+
+            inviteInput = new();
+
+
+
+            StateHasChanged();
+
+        }
+
+        catch (Exception ex)
+
+        {
+
+            Console.WriteLine(ex.Message);
+
+        }
+
+    }
+
+
+
+    private void ToggleInvite(int applicationId)
+
+    {
+
+        if (inviteApplicationId == applicationId)
+
+        {
+
+            inviteApplicationId = null;
+
+        }
+
+        else
+
+        {
+
+            inviteApplicationId = applicationId;
+
+            inviteInput = new(); // Wyczyść model walidacji
+
+        }
+
+    }
+
+
+
+    private void ToggleDetails(string applicantId)
+
+    {
+
+        if (expandedApplicantId == applicantId)
+
+        {
+
+            expandedApplicantId = null;
+
+        }
+
+        else
+
+        {
+
+            expandedApplicantId = applicantId;
+
+        }
+
+        StateHasChanged();
+
+    }
+
+
+
+    private string GetStatusBadgeClass(OfferStatus status)
+
+    {
+
+        return status switch
+
+        {
+
+            OfferStatus.Opublikowana => "bg-success",
+
+            OfferStatus.Weryfikacja => "bg-warning text-dark",
+
+            OfferStatus.Odrzucona => "bg-danger",
+
+            _ => "bg-secondary"
+
+        };
+
+    }
+
+
+
+    private string GetApplicationStatusBadge(ApplicationStatus status)
+
+    {
+
+        return status switch
+
+        {
+
+            ApplicationStatus.Aplikowano => "bg-secondary",
+
+            ApplicationStatus.Zaproszony => "bg-success",
+
+            ApplicationStatus.Odrzucony => "bg-danger",
+
+            _ => "bg-light text-dark"
+
+        };
+
+    }
+
+
+
+    private string GetStatusBorderClass(OfferStatus status)
+
+    {
+
+        return status switch
+
+        {
+
+            OfferStatus.Opublikowana => "border-success",
+
+            OfferStatus.Weryfikacja => "border-warning",
+
+            OfferStatus.Odrzucona => "border-danger",
+
+            _ => "border-secondary"
+
+        };
+
+    }
+
+
+
+    private string GetExperienceLabel(ExperienceYearsRange experience)
+
+    {
+
+        return experience switch
+
+        {
+
+            ExperienceYearsRange.Zero => "0 lat",
+
+            ExperienceYearsRange.LessThanOne => "<1 rok",
+
+            ExperienceYearsRange.OneToThree => "1-3 lata",
+
+            ExperienceYearsRange.ThreePlus => "3+ lat",
+
+            _ => "Nie podano"
+
+        };
+
+    }
+}

@@ -1,0 +1,185 @@
+﻿@page "/joboffers/details/{Id:int}"
+@using JobSearch.Services
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
+@inject NavigationManager NavigationManager
+
+@inject IJobOfferService JobOfferService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin,Moderator")]
+
+<PageTitle>Szczegóły Oferty</PageTitle>
+
+<h3>Szczegóły Oferty Pracy</h3>
+
+@if (jobOffer == null)
+
+{
+    <p><em>Ładowanie...</em></p>
+}
+
+else
+
+{
+    <div class="card">
+        <div class="card-header">
+            <h4>@jobOffer.Title</h4>
+            <h6 class="text-muted">@jobOffer.CompanyName</h6>
+        </div>
+        <div class="card-body">
+
+            <div class="mb-3 p-3 border @GetStatusBorderClass(jobOffer.Status) rounded">
+                <h5 class="card-title">Status Moderacji</h5>
+                <dl class="row">
+                    <dt class="col-sm-3">Aktualny status:</dt>
+                    <dd class="col-sm-9">
+                        <span class="badge @GetStatusBadgeClass(jobOffer.Status)">@jobOffer.Status.ToString()</span>
+                    </dd>
+
+                    @if (!string.IsNullOrEmpty(jobOffer.ModerationComment))
+                    {
+                        <dt class="col-sm-3">Komentarz moderacyjny:</dt>
+                        <dd class="col-sm-9">@jobOffer.ModerationComment</dd>
+                    }
+                </dl>
+            </div>
+
+            <h5 class_mt-4>Szczegóły ogłoszenia</h5>
+            <dl class="row">
+                <dt class="col-sm-3">Lokalizacja</dt>
+                <dd class="col-sm-9">@jobOffer.Location</dd>
+
+                <dt class="col-sm-3">Wynagrodzenie</dt>
+                <dd class="col-sm-9">@jobOffer.SalaryRange</dd>
+
+                <dt class="col-sm-3">Rodzaj zatrudnienia</dt>
+                <dd class="col-sm-9">@jobOffer.EmplType</dd>
+
+                <dt class="col-sm-3">Tryb pracy</dt>
+                <dd class="col-sm-9">@jobOffer.JobType</dd>
+
+                <dt class="col-sm-3">Opis stanowiska</dt>
+                <dd class="col-sm-9">
+                    @if (!string.IsNullOrEmpty(jobOffer.Description))
+                    {
+                        @((MarkupString)jobOffer.Description.Replace("\n", "<br />"))
+                    }
+                </dd>
+
+                <dt class="col-sm-3">Wymagania</dt>
+                <dd class="col-sm-9">
+                    @if (!string.IsNullOrEmpty(jobOffer.Requirements))
+                    {
+                        @((MarkupString)jobOffer.Requirements.Replace("\n", "<br />"))
+                    }
+                </dd>
+
+                @if (!string.IsNullOrEmpty(jobOffer.Benefits))
+
+                {
+                    <dt class="col-sm-3">Benefity</dt>
+                    <dd class="col-sm-9">@jobOffer.Benefits</dd>
+                }
+
+                <dt class="col-sm-3">Data publikacji</dt>
+                <dd class="col-sm-9">@jobOffer.DatePosted.ToShortDateString()</dd>
+            </dl>
+        </div>
+        <div class="card-footer d-flex justify-content-between">
+            <a href="/joboffers" class="btn btn-secondary">Powrót do listy</a>
+
+            <AuthorizeView>
+                <Authorized Context="auth">
+                    @if (auth.User != null && (auth.User.IsInRole("Admin") || auth.User.IsInRole("Moderator")))
+                    {
+                        <div>
+                            <a href="@($"/joboffers/edit/{jobOffer.Id}")" class="btn btn-primary">Edytuj / Moderuj</a>
+                            <a href="@($"/joboffers/delete/{jobOffer.Id}")" class="btn btn-danger">Usuń</a>
+                        </div>
+                    }
+                </Authorized>
+            </AuthorizeView>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+
+    public int Id { get; set; }
+
+
+
+    private JobOffer? jobOffer;
+
+
+
+    protected override async Task OnInitializedAsync()
+
+    {
+
+        jobOffer = await JobOfferService.GetByIdAsync(Id);
+
+
+
+        if (jobOffer == null)
+
+        {
+
+            Navigation.NavigateTo("/joboffers");
+
+        }
+
+    }
+
+
+
+    // DODANA METODA: Helper CSS dla statusów
+
+    private string GetStatusBadgeClass(OfferStatus status)
+
+    {
+
+        return status switch
+
+        {
+
+            OfferStatus.Opublikowana => "bg-success",
+
+            OfferStatus.Weryfikacja => "bg-warning text-dark",
+
+            OfferStatus.Odrzucona => "bg-danger",
+
+            _ => "bg-secondary"
+
+        };
+
+    }
+
+
+
+    // DODANA METODA: Helper CSS dla ramki
+
+    private string GetStatusBorderClass(OfferStatus status)
+
+    {
+
+        return status switch
+
+        {
+
+            OfferStatus.Opublikowana => "border-success",
+
+            OfferStatus.Weryfikacja => "border-warning",
+
+            OfferStatus.Odrzucona => "border-danger",
+
+            _ => "border-secondary"
+
+        };
+
+    }
+}

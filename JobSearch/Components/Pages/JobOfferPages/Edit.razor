@@ -1,0 +1,189 @@
+﻿@page "/joboffers/edit/{Id:int}"
+@using JobSearch.Data
+@using JobSearch.Services
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@inject IJobOfferService JobOfferService
+@inject NavigationManager NavigationManager
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin,Moderator")]
+
+<PageTitle>Edit</PageTitle>
+
+<h1>Edit</h1>
+
+<h2>JobOffer</h2>
+<hr />
+@if (JobOffer is null)
+
+{
+    <p><em>Loading...</em></p>
+}
+
+else
+
+{
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="JobOffer" OnValidSubmit="UpdateJobOffer" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary role="alert" />
+                <input type="hidden" name="JobOffer.Id" value="@JobOffer.Id" />
+
+                <div class="mb-3 p-3 border border-warning rounded">
+                    <h5 class="text-warning">Panel Moderatora</h5>
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Status oferty:</label>
+                        <InputSelect id="status" @bind-Value="JobOffer.Status" class="form-control" aria-required="true">
+                            @foreach (var status in Enum.GetValues(typeof(OfferStatus)))
+
+                            {
+                                <option value="@status">@status</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="() => JobOffer.Status" class="text-danger" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="moderationcomment" class="form-label">Komentarz moderacyjny (widoczny tylko dla moderatorów):</label>
+                        <InputTextArea id="moderationcomment" @bind-Value="JobOffer.ModerationComment" class="form-control" />
+                        <ValidationMessage For="() => JobOffer.ModerationComment" class="text-danger" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title:</label>
+                    <InputText id="title" @bind-Value="JobOffer.Title" class="form-control" aria-required="true" />
+                    <ValidationMessage For="() => JobOffer.Title" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description:</label>
+                    <InputText id="description" @bind-Value="JobOffer.Description" class="form-control" aria-required="true" />
+                    <ValidationMessage For="() => JobOffer.Description" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="companyname" class="form-label">CompanyName:</label>
+                    <InputText id="companyname" @bind-Value="JobOffer.CompanyName" class="form-control" aria-required="true" />
+                    <ValidationMessage For="() => JobOffer.CompanyName" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="location" class="form-label">Location:</label>
+                    <InputText id="location" @bind-Value="JobOffer.Location" class="form-control" aria-required="true" />
+                    <ValidationMessage For="() => JobOffer.Location" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="contactinfo" class="form-label">ContactInfo:</label>
+                    <InputText id="contactinfo" @bind-Value="JobOffer.ContactInfo" class="form-control" aria-required="true" />
+                    <ValidationMessage For="() => JobOffer.ContactInfo" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="dateposted" class="form-label">DatePosted:</label>
+                    <InputDate id="dateposted" @bind-Value="JobOffer.DatePosted" class="form-control" />
+                    <ValidationMessage For="() => JobOffer.DatePosted" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="applicationdeadline" class="form-label">ApplicationDeadline:</label>
+                    <InputDate id="applicationdeadline" @bind-Value="JobOffer.ApplicationDeadline" class="form-control" />
+                    <ValidationMessage For="() => JobOffer.ApplicationDeadline" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="empltype" class="form-label">EmplType:</label>
+                    <InputSelect id="empltype" @bind-Value="JobOffer.EmplType" class="form-control" aria-required="true">
+                        @foreach (var value in Enum.GetValues(typeof(EmploymentType)))
+                        {
+                            <option value="@value">@value</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => JobOffer.EmplType" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="jobtype" class="form-label">JobType:</label>
+                    <InputSelect id="jobtype" @bind-Value="JobOffer.JobType" class="form-control" aria-required="true">
+                        @foreach (var value in Enum.GetValues(typeof(JobType)))
+                        {
+                            <option value="@value">@value</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => JobOffer.JobType" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="salarymin" class="form-label">SalaryMin:</label>
+                    <InputNumber id="salarymin" @bind-Value="JobOffer.SalaryMin" class="form-control" />
+                    <ValidationMessage For="() => JobOffer.SalaryMin" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="salarymax" class="form-label">SalaryMax:</label>
+                    <InputNumber id="salarymax" @bind-Value="JobOffer.SalaryMax" class="form-control" />
+                    <ValidationMessage For="() => JobOffer.SalaryMax" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="requirements" class="form-label">Requirements:</label>
+                    <InputText id="requirements" @bind-Value="JobOffer.Requirements" class="form-control" aria-required="true" />
+                    <ValidationMessage For="() => JobOffer.Requirements" class="text-danger" />
+                </div>
+                <div class="mb-3">
+                    <label for="benefits" class="form-label">Benefits:</label>
+                    <InputText id="benefits" @bind-Value="JobOffer.Benefits" class="form-control" />
+                    <ValidationMessage For="() => JobOffer.Benefits" class="text-danger" />
+                </div>
+                <button type="submit" class="btn btn-primary">Save</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/joboffers">Back to List</a>
+</div>
+
+@code {
+    [Parameter]
+
+    public int Id { get; set; }
+
+
+
+    [SupplyParameterFromForm]
+
+    private JobOffer? JobOffer { get; set; }
+
+
+
+    protected override async Task OnParametersSetAsync()
+
+    {
+
+        JobOffer ??= await JobOfferService.GetByIdAsync(Id);
+
+        if (JobOffer is null)
+
+            NavigationManager.NavigateTo("notfound");
+
+    }
+
+
+
+    private async Task UpdateJobOffer()
+
+    {
+
+        if (JobOffer is null) return;
+
+
+
+        if (JobOffer.Status != OfferStatus.Odrzucona)
+
+        {
+
+            JobOffer.ModerationComment = null;
+
+        }
+
+
+
+        await JobOfferService.UpdateAsync(JobOffer);
+
+        NavigationManager.NavigateTo("/joboffers");
+
+    }
+}

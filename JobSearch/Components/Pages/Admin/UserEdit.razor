@@ -1,0 +1,120 @@
+﻿@page "/admin/users/{id}"
+
+@using JobSearch.Data
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin")]
+@inject UserManager<ApplicationUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+@inject NavigationManager Nav
+
+<h1>Edycja użytkownika</h1>
+
+@if (user is null)
+{
+    <p>Ładowanie...</p>
+}
+else
+{
+    <EditForm Model="@model" OnValidSubmit="Save">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div>Email: @user.Email</div>
+        <input @bind="model.DisplayName" placeholder="Nazwa" />
+        <label>
+            Zablokuj do:
+            <InputDate @bind-Value="model.LockoutEnd" />
+        </label>
+        <div>
+            <h3>Role</h3>
+            @foreach (var r in allRoles)
+            {
+                <label>
+                    <input type="checkbox" checked="@selectedRoles.Contains(r)" @onchange="e => ToggleRole(r, e.Value is bool b && b)" />
+                    @r
+                </label>
+            }
+            <!--
+                <input @bind="newRole" placeholder="Dodaj rolę" />
+                <button type="button" @onclick="AddRole">Dodaj rolę</button>
+            -->
+        </div>
+        <div>
+            <h3>Reset hasła</h3>
+            <input @bind="newPassword" type="password" placeholder="Nowe hasło" />
+            <button type="button" @onclick="ResetPassword">Ustaw hasło</button>
+        </div>
+        <button type="submit">Zapisz</button>
+        <button type="button" @onclick="Back">Wróć</button>
+    </EditForm>
+}
+
+@code {
+    [Parameter] public string id { get; set; } = "";
+    private ApplicationUser? user;
+    private EditUserDto model = new();
+    private HashSet<string> selectedRoles = new();
+    private List<string> allRoles = new();
+    private string newRole = "";
+    private string newPassword = "";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        user = await UserManager.FindByIdAsync(id);
+        if (user is null) return;
+        model.DisplayName = user.DisplayName;
+        model.LockoutEnd = user.LockoutEnd?.UtcDateTime;
+        allRoles = RoleManager.Roles.Select(r => r.Name!).OrderBy(x => x).ToList();
+        var roles = await UserManager.GetRolesAsync(user);
+        selectedRoles = roles.ToHashSet();
+    }
+
+    private async Task Save()
+    {
+        if (user is null) return;
+        user.DisplayName = model.DisplayName;
+        user.LockoutEnd = model.LockoutEnd.HasValue ? new DateTimeOffset(DateTime.SpecifyKind(model.LockoutEnd.Value, DateTimeKind.Utc)) : null;
+        await UserManager.UpdateAsync(user);
+        var current = await UserManager.GetRolesAsync(user);
+        var toAdd = selectedRoles.Except(current);
+        var toRemove = current.Except(selectedRoles);
+        if (toAdd.Any()) await UserManager.AddToRolesAsync(user, toAdd);
+        if (toRemove.Any()) await UserManager.RemoveFromRolesAsync(user, toRemove);
+        Back();
+    }
+
+    private void ToggleRole(string role, bool isChecked)
+    {
+        if (isChecked) selectedRoles.Add(role); else selectedRoles.Remove(role);
+        StateHasChanged();
+    }
+
+    private async Task AddRole()
+    {
+        if (string.IsNullOrWhiteSpace(newRole)) return;
+        if (!await RoleManager.RoleExistsAsync(newRole)) await RoleManager.CreateAsync(new IdentityRole(newRole));
+        selectedRoles.Add(newRole);
+        if (!allRoles.Contains(newRole)) allRoles.Add(newRole);
+        newRole = "";
+    }
+
+    private async Task ResetPassword()
+    {
+        if (user is null || string.IsNullOrWhiteSpace(newPassword)) return;
+        var token = await UserManager.GeneratePasswordResetTokenAsync(user);
+        await UserManager.ResetPasswordAsync(user, token, newPassword);
+        newPassword = "";
+    }
+
+    private void Back() => Nav.NavigateTo("/admin/users");
+
+    private sealed class EditUserDto
+    {
+        public string? DisplayName { get; set; }
+        public DateTime? LockoutEnd { get; set; }
+    }
+}
+

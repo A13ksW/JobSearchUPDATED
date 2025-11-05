@@ -1,0 +1,66 @@
+﻿@page "/admin/users/new"
+@using JobSearch.Data
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using System.ComponentModel.DataAnnotations
+
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Admin")]
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager Nav
+
+<h1>Nowy użytkownik</h1>
+@if (!string.IsNullOrWhiteSpace(Message))
+{
+    <div class="alert alert-danger">@Message</div>
+}
+<EditForm Model="@model" OnValidSubmit="Save">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <input @bind="model.Email" placeholder="Email" />
+    <input @bind="model.DisplayName" placeholder="Nazwa" />
+    <input @bind="model.Password" type="password" placeholder="Hasło" />
+
+    <!--div class="form-floating mb-3">
+        <InputText @bind-Value="model.Password" type="password" placeholder="Hasło" />
+        <ValidationMessage For="() => model.Password" class="text-danger" />
+    </!--div-->
+
+
+    <input @bind="roleInput" placeholder="Role, np. Admin;User" />
+    <button type="submit">Zapisz</button>
+    <button type="button" @onclick="Back">Anuluj</button>
+</EditForm>
+
+@code {
+    private IEnumerable<IdentityError>? identityErrors;
+
+    private CreateUserDto model = new();
+    private string roleInput = "";
+    private string? Message => identityErrors is null ? null : $"Error: {string.Join(", ", identityErrors.Select(error => error.Description))}";
+
+    private async Task Save()
+    {
+        var user = new ApplicationUser { UserName = model.Email, Email = model.Email, DisplayName = model.DisplayName, EmailConfirmed = true };
+        var res = await UserManager.CreateAsync(user, model.Password);
+        if (!res.Succeeded)
+        {
+            identityErrors = res.Errors;
+            return;
+        }
+        var roles = roleInput.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        foreach (var r in roles) await UserManager.AddToRoleAsync(user, r);
+        Back();
+    }
+
+    private void Back() => Nav.NavigateTo("/admin/users");
+
+    private sealed class CreateUserDto
+    {
+        [Required, EmailAddress] public string Email { get; set; } = "";
+        [Required, MinLength(8)] public string Password { get; set; } = "";
+        public string? DisplayName { get; set; }
+    }
+}
+
