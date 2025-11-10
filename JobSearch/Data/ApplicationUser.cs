@@ -20,5 +20,7 @@ namespace JobSearch.Data
 
         // --- DODAJ TÊ LINIÊ ---
         public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
-    }
+
+		public string AccountType { get; set; } = "Individual";
+	}
 }

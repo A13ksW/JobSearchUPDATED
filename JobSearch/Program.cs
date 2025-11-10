@@ -30,6 +30,12 @@ builder.Services
     .AddPolicy("RequireAdmin", policy => policy.RequireRole("Admin"))
     .AddPolicy("RequireModerator", policy => policy.RequireRole("Moderator"));
 
+builder.Services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, ApplicationUserClaimsPrincipalFactory>();
+
+builder.Services.AddAuthorizationCore(options =>
+{
+	options.AddPolicy("CanSearchJobs", policy => policy.RequireClaim("account_type", "Individual"));
+});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 // 1) Najpierw fabryka (singleton)
