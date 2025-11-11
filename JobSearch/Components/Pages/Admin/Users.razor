@@ -20,6 +20,7 @@
         <tr>
             <th>Email</th>
             <th>Nazwa</th>
+            <th>Typ konta</th>
             <th>Role</th>
             <th>Status</th>
             <th></th>
@@ -31,6 +32,7 @@
             <tr>
                 <td>@u.Email</td>
                 <td>@u.DisplayName</td>
+                <td>@u.AccountType</td>
                 <td>@string.Join(", ", u.Roles)</td>
                 <td>@(u.LockoutEnd.HasValue && u.LockoutEnd > DateTimeOffset.UtcNow ? "Zablokowany" : "Aktywny")</td>
                 <td>
@@ -58,7 +60,7 @@
         foreach (var u in list)
         {
             var roles = await UserManager.GetRolesAsync(u);
-            result.Add(new UserRow { Id = u.Id, Email = u.Email!, DisplayName = u.DisplayName, Roles = roles.ToList(), LockoutEnd = u.LockoutEnd });
+            result.Add(new UserRow { Id = u.Id, Email = u.Email!, DisplayName = u.DisplayName, AccountType = u.AccountType, Roles = roles.ToList(), LockoutEnd = u.LockoutEnd });
         }
         users = result;
     }
@@ -78,6 +80,7 @@
         public string Id { get; set; } = "";
         public string Email { get; set; } = "";
         public string? DisplayName { get; set; }
+        public string? AccountType { get; set; }
         public List<string> Roles { get; set; } = new();
         public DateTimeOffset? LockoutEnd { get; set; }
     }
