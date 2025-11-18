@@ -14,50 +14,143 @@
     <a href="/joboffers/create" class="btn btn-primary">Dodaj nową ofertę</a>
 </p>
 
-<div class="card mb-4">
-    <div class="card-body">
-        <h5 class="card-title">Filtruj i sortuj</h5>
-        <div class="row g-3">
-            <div class="col-md-6 col-lg-3">
-                <label for="locationFilter" class="form-label">Lokalizacja</label>
-                <input id="locationFilter" @bind="locationFilter" class="form-control" placeholder="np. Warszawa" />
-            </div>
-            <div class="col-md-3">
-                <label for="industryFilter" class="form-label">Branża</label>
-                <InputSelect id="industryFilter"
-                             class="form-select"
-                             @bind-Value="selectedIndustryCategory">
-                    <option value="">Wszystkie branże</option>
-                    @foreach (var category in Enum.GetValues(typeof(IndustryCategory)).Cast<IndustryCategory>())
-                    {
-                        if (category == IndustryCategory.None) continue;
-                        <option value="@category">@GetIndustryLabel(category)</option>
-                    }
-                </InputSelect>
+<div class="card-body">
+    <h5 class="card-title">Filtruj i sortuj</h5>
+
+    <!-- PODSTAWOWE FILTRY -->
+    <div class="row g-3">
+        <div class="col-md-6 col-lg-3">
+            <label for="locationFilter" class="form-label">Lokalizacja</label>
+            <input id="locationFilter" @bind="locationFilter" class="form-control" placeholder="np. Warszawa" />
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <label for="employmentTypeFilter" class="form-label">Rodzaj zatrudnienia</label>
+            <InputSelect id="employmentTypeFilter" @bind-Value="employmentTypeFilter" class="form-select">
+                <option value="">Wszystkie</option>
+                @foreach (var type in Enum.GetValues(typeof(EmploymentType)))
+                {
+                    <option value="@type">@type</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="col-md-3">
+            <label for="industryFilter" class="form-label">Branża</label>
+            <InputSelect id="industryFilter"
+                         class="form-select"
+                         @bind-Value="selectedIndustryCategory">
+                <option value="">Wszystkie branże</option>
+                @foreach (var category in Enum.GetValues(typeof(IndustryCategory)).Cast<IndustryCategory>())
+                {
+                    if (category == IndustryCategory.None) continue;
+                    <option value="@category">@GetIndustryLabel(category)</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <label for="jobTypeFilter" class="form-label">Tryb pracy</label>
+            <InputSelect id="jobTypeFilter" @bind-Value="jobTypeFilter" class="form-select">
+                <option value="">Wszystkie</option>
+                @foreach (var type in Enum.GetValues(typeof(JobType)))
+                {
+                    <option value="@type">@type</option>
+                }
+            </InputSelect>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <label for="salaryFilter" class="form-label">Minimalne wynagrodzenie</label>
+            <InputNumber id="salaryFilter" @bind-Value="minSalaryFilter" class="form-control" placeholder="np. 5000" />
+        </div>
+    </div>
+
+    <!-- PRZYCISKI SORT/ FILTR / WYCZYŚĆ -->
+    <div class="row g-3 mt-2 align-items-end">
+        <div class="col-md-6 col-lg-4">
+            <label for="sortBy" class="form-label">Sortuj według</label>
+            <select id="sortBy" @bind="sortBy" class="form-select">
+                <option value="date_desc">Najnowsze</option>
+                <option value="salary_desc">Wynagrodzenie (najwyższe)</option>
+                <option value="salary_asc">Wynagrodzenie (najniższe)</option>
+            </select>
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <button class="btn btn-success w-100" @onclick="ApplyFilters">Filtruj</button>
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <button class="btn btn-secondary w-100" @onclick="ClearFilters">Wyczyść</button>
+        </div>
+    </div>
+
+    <!-- PRZYCISK ROZWIJANIA DODATKOWYCH FILTRÓW -->
+    <div class="mt-3">
+        <button type="button"
+                class="btn btn-link p-0 d-flex align-items-center"
+                @onclick="ToggleAdvancedFilters">
+            <span class="me-1 fw-semibold">Dodatkowe filtry</span>
+            <span>@(showAdvancedFilters ? "▲" : "▼")</span>
+        </button>
+    </div>
+
+    <!-- ROZWIJANA SEKCJA Z DODATKOWYMI FILTRAMI -->
+    @if (showAdvancedFilters)
+    {
+        <div class="row g-2 mt-1">
+            <div class="col-md-4">
+                <div class="form-check">
+                    <InputCheckbox id="filterExperience"
+                                   class="form-check-input"
+                                   @bind-Value="onlyWithExperience" />
+                    <label class="form-check-label" for="filterExperience">
+                        Wymagane doświadczenie
+                    </label>
+                </div>
+
+                <div class="form-check">
+                    <InputCheckbox id="filterOnlineRecruitment"
+                                   class="form-check-input"
+                                   @bind-Value="onlyOnlineRecruitment" />
+                    <label class="form-check-label" for="filterOnlineRecruitment">
+                        Rekrutacja online
+                    </label>
+                </div>
             </div>
 
-            <div class="col-md-6 col-lg-3">
-                <label for="employmentTypeFilter" class="form-label">Rodzaj zatrudnienia</label>
-                <InputSelect id="employmentTypeFilter" @bind-Value="employmentTypeFilter" class="form-select">
-                    <option value="">Wszystkie</option>
-                    @foreach (var type in Enum.GetValues(typeof(EmploymentType)))
+            <div class="col-md-8">
+                <label class="form-label d-block">Specjalne wymagania</label>
 
-                    {
-                        <option value="@type">@type</option>
-                    }
-                </InputSelect>
-            </div>
-            <div class="col-md-6 col-lg-3">
-                <label for="jobTypeFilter" class="form-label">Tryb pracy</label>
-                <InputSelect id="jobTypeFilter" @bind-Value="jobTypeFilter" class="form-select">
-                    <option value="">Wszystkie</option>
-                    @foreach (var type in Enum.GetValues(typeof(JobType)))
+                <div class="form-check">
+                    <InputCheckbox id="filterSanitaryBook"
+                                   class="form-check-input"
+                                   @bind-Value="onlyWithSanitaryBook" />
+                    <label class="form-check-label" for="filterSanitaryBook">
+                        Książeczka sanepidowska
+                    </label>
+                </div>
 
-                    {
-                        <option value="@type">@type</option>
-                    }
-                </InputSelect>
+                <div class="form-check">
+                    <InputCheckbox id="filterStudentStatus"
+                                   class="form-check-input"
+                                   @bind-Value="onlyWithStudentStatus" />
+                    <label class="form-check-label" for="filterStudentStatus">
+                        Status studenta
+                    </label>
+                </div>
+
+                <div class="form-check">
+                    <InputCheckbox id="filterDisability"
+                                   class="form-check-input"
+                                   @bind-Value="onlyWithDisabilityCertificate" />
+                    <label class="form-check-label" for="filterDisability">
+                        Orzeczenie o niepełnosprawności
+                    </label>
+                </div>
             </div>
+        </div>
+    }
+</div>
             <div class="col-md-6 col-lg-3">
                 <label for="statusFilter" class="form-label">Status oferty</label>
                 <InputSelect id="statusFilter" @bind-Value="statusFilter" class="form-select">
@@ -69,7 +162,7 @@
                     }
                 </InputSelect>
             </div>
-        </div>
+      
         <div class="row g-3 mt-2 align-items-end">
             <div class="col-md-6 col-lg-4">
                 <label for="sortBy" class="form-label">Sortuj według</label>
@@ -86,9 +179,7 @@
                 <button class="btn btn-secondary w-100" @onclick="ClearFilters">Wyczyść</button>
             </div>
         </div>
-    </div>
-</div>
-
+   
 
 @if (jobOffers == null)
 
@@ -183,6 +274,20 @@ else
         _ => category.ToString()
     };
 
+    private bool onlyWithExperience;
+    private bool onlyOnlineRecruitment;
+    private bool onlyWithSanitaryBook;
+    private bool onlyWithStudentStatus;
+    private bool onlyWithDisabilityCertificate;
+    private bool showAdvancedFilters = false;
+
+    private void ToggleAdvancedFilters()
+    {
+        showAdvancedFilters = !showAdvancedFilters;
+    }
+
+
+
     private OfferStatus? statusFilter = OfferStatus.Weryfikacja; // Domyślnie Weryfikacja
 
 
@@ -221,6 +326,12 @@ else
 
         selectedIndustryCategory = null;
 
+        onlyWithExperience = false;
+        onlyOnlineRecruitment = false;
+        onlyWithSanitaryBook = false;
+        onlyWithStudentStatus = false;
+        onlyWithDisabilityCertificate = false;
+
         statusFilter = OfferStatus.Weryfikacja;
 
         sortBy = "date_desc";
@@ -235,7 +346,7 @@ else
 
     {
 
-        var allOffers = await JobOfferService.GetJobOffersAsync(locationFilter, minSalaryFilter, sortBy, employmentTypeFilter, jobTypeFilter, selectedIndustryCategory);
+        var allOffers = await JobOfferService.GetJobOffersAsync(locationFilter, minSalaryFilter, sortBy, employmentTypeFilter, jobTypeFilter, selectedIndustryCategory, onlyWithExperience,onlyOnlineRecruitment, onlyWithSanitaryBook,onlyWithStudentStatus,onlyWithDisabilityCertificate);
 
 
 

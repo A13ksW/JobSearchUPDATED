@@ -135,6 +135,61 @@
                 <InputText id="benefits" @bind-Value="JobOffer.Benefits" class="form-control" maxlength="200" />
                 <ValidationMessage For="() => JobOffer.Benefits" class="text-danger" />
             </div>
+            <div class="mb-3">
+                <label class="form-label">Wymagane doświadczenie</label>
+                <div class="form-check">
+                    <InputCheckbox id="requiresExperience"
+                                   class="form-check-input"
+                                   @bind-Value="JobOffer.RequiresExperience" />
+                    <label class="form-check-label" for="requiresExperience">
+                        Zaznacz, jeśli wymagane jest wcześniejsze doświadczenie
+                    </label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Rekrutacja online</label>
+                <div class="form-check">
+                    <InputCheckbox id="isOnlineRecruitment"
+                                   class="form-check-input"
+                                   @bind-Value="JobOffer.IsOnlineRecruitment" />
+                    <label class="form-check-label" for="isOnlineRecruitment">
+                        Zaznacz, jeśli proces rekrutacji odbywa się online
+                    </label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Specjalne wymagania</label>
+
+                <div class="form-check">
+                    <InputCheckbox id="requiresSanitaryBook"
+                                   class="form-check-input"
+                                   @bind-Value="JobOffer.RequiresSanitaryBook" />
+                    <label class="form-check-label" for="requiresSanitaryBook">
+                        Książeczka sanepidowska
+                    </label>
+                </div>
+
+                <div class="form-check">
+                    <InputCheckbox id="requiresStudentStatus"
+                                   class="form-check-input"
+                                   @bind-Value="JobOffer.RequiresStudentStatus" />
+                    <label class="form-check-label" for="requiresStudentStatus">
+                        Status studenta
+                    </label>
+                </div>
+
+                <div class="form-check">
+                    <InputCheckbox id="requiresDisabilityCertificate"
+                                   class="form-check-input"
+                                   @bind-Value="JobOffer.RequiresDisabilityCertificate" />
+                    <label class="form-check-label" for="requiresDisabilityCertificate">
+                        Orzeczenie o niepełnosprawności
+                    </label>
+                </div>
+            </div>
+
 
 
             <button type="submit" class="btn btn-primary" disabled="@(!isNipVerified)">Wyślij do weryfikacji</button>

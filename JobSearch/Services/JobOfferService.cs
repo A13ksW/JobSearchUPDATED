@@ -45,7 +45,7 @@ public class JobOfferService : IJobOfferService
         context.AuditLogs.Add(log);
     }
 
-    public async Task<List<JobOffer>> GetJobOffersAsync(string? location, decimal? minSalary, string? sortBy, EmploymentType? employmentType, JobType? jobType, IndustryCategory? industryCategory)
+    public async Task<List<JobOffer>> GetJobOffersAsync(string? location, decimal? minSalary, string? sortBy, EmploymentType? employmentType, JobType? jobType, IndustryCategory? industryCategory, bool onlyWithExperience, bool onlyOnlineRecruitment, bool onlyWithSanitaryBook, bool onlyWithStudentStatus, bool onlyWithDisabilityCertificate)
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
         var query = context.JobOffer.AsQueryable();
@@ -75,6 +75,34 @@ public class JobOfferService : IJobOfferService
         {
             query = query.Where(o => o.JobType == jobType.Value);
         }
+        
+        if (onlyWithExperience)
+        {
+            query = query.Where(o => o.RequiresExperience);
+        }
+
+       
+        if (onlyOnlineRecruitment)
+        {
+            query = query.Where(o => o.IsOnlineRecruitment);
+        }
+
+       
+        if (onlyWithSanitaryBook)
+        {
+            query = query.Where(o => o.RequiresSanitaryBook);
+        }
+
+        if (onlyWithStudentStatus)
+        {
+            query = query.Where(o => o.RequiresStudentStatus);
+        }
+
+        if (onlyWithDisabilityCertificate)
+        {
+            query = query.Where(o => o.RequiresDisabilityCertificate);
+        }
+
         switch (sortBy)
         {
             case "salary_desc":

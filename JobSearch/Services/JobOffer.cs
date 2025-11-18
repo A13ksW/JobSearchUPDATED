@@ -99,6 +99,16 @@ namespace JobSearch.Services
 
         [Required]
         public JobType JobType { get; set; }
+       
+        public bool RequiresExperience { get; set; }
+
+       
+        public bool IsOnlineRecruitment { get; set; }
+
+       
+        public bool RequiresSanitaryBook { get; set; }          
+        public bool RequiresStudentStatus { get; set; }          
+        public bool RequiresDisabilityCertificate { get; set; }
 
 
         [NotMapped]
