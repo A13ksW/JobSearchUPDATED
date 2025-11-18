@@ -4,7 +4,7 @@ using JobSearch.Services;
 public interface IJobOfferService
 {
     // --- Istniejące metody ---
-    Task<List<JobOffer>> GetJobOffersAsync(string? location, decimal? minSalary, string? sortBy, EmploymentType? employmentType, JobType? jobType);
+    Task<List<JobOffer>> GetJobOffersAsync(string? location, decimal? minSalary, string? sortBy, EmploymentType? employmentType, JobType? jobType, IndustryCategory? industryCategory);
     Task<JobOffer?> GetByIdAsync(int id);
     Task CreateAsync(JobOffer jobOffer);
     Task UpdateAsync(JobOffer jobOffer);

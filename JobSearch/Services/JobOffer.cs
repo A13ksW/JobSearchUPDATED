@@ -31,10 +31,38 @@ namespace JobSearch.Services
         [Display(Name = "Wygasła")]
         Wygasła
     }
-
+    public enum IndustryCategory
+    {
+        None,
+        Sprzedaz,
+        Marketing,
+        Finanse,
+        Bankowosc,
+        ObslugaKlienta,
+        ZdrowieIUroda,
+        Gastronomia,
+        Turystyka,
+        Zarzadzanie,
+        PracaWSklepie,
+        Budownictwo,
+        Produkcja,
+        Nieruchomosci,
+        Edukacja,
+        Logistyka,
+        HR,
+        Design,
+        BIData,
+        PracaBiurowa,
+        Consulting,
+        Media,
+        Prawo,
+        IT
+    }
     public class JobOffer : IValidatableObject
     {
         public int Id { get; set; }
+
+
 
         [Required, StringLength(80, ErrorMessage = "Tytuł nie może przekraczać 80 znaków.")]
         public string Title { get; set; } = string.Empty;
@@ -42,7 +70,7 @@ namespace JobSearch.Services
         [Required, StringLength(500, ErrorMessage = "Opis nie może przekraczać 500 znaków.")]
         public string Description { get; set; } = string.Empty;
 
-        [Required, StringLength(50, ErrorMessage = "Nazwa firmy nie może przekraczać 50 znaków.")]
+        [Required, StringLength(500, ErrorMessage = "Nazwa firmy nie może przekraczać 500 znaków.")]
         public string CompanyName { get; set; } = string.Empty;
 
         // --- NOWE POLE ---
@@ -51,8 +79,9 @@ namespace JobSearch.Services
         [RegularExpression("^[0-9]{10}$", ErrorMessage = "NIP musi składać się wyłącznie z 10 cyfr.")]
         public string Nip { get; set; } = string.Empty;
         // --- KONIEC NOWEGO POLA ---
+        public IndustryCategory IndustryCategory { get; set; }
 
-        [Required, StringLength(100)]
+        [Required, StringLength(100)]
         public string Location { get; set; } = string.Empty;
 
         [Required, StringLength(250)]
@@ -70,6 +99,7 @@ namespace JobSearch.Services
 
         [Required]
         public JobType JobType { get; set; }
+
 
         [NotMapped]
         public string SalaryRange

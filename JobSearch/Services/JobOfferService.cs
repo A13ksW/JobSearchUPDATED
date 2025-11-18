@@ -45,7 +45,7 @@ public class JobOfferService : IJobOfferService
         context.AuditLogs.Add(log);
     }
 
-    public async Task<List<JobOffer>> GetJobOffersAsync(string? location, decimal? minSalary, string? sortBy, EmploymentType? employmentType, JobType? jobType)
+    public async Task<List<JobOffer>> GetJobOffersAsync(string? location, decimal? minSalary, string? sortBy, EmploymentType? employmentType, JobType? jobType, IndustryCategory? industryCategory)
     {
         await using var context = await _contextFactory.CreateDbContextAsync();
         var query = context.JobOffer.AsQueryable();
@@ -65,6 +65,11 @@ public class JobOfferService : IJobOfferService
         if (employmentType.HasValue)
         {
             query = query.Where(o => o.EmplType == employmentType.Value);
+
+        }
+        if (industryCategory.HasValue)
+        {
+            query = query.Where(o => o.IndustryCategory == industryCategory.Value);
         }
         if (jobType.HasValue)
         {

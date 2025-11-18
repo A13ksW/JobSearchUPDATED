@@ -52,9 +52,21 @@
 
             <div class="mb-3">
                 <label for="companyname" class="form-label">Nazwa firmy (uzupełniana automatycznie):</label>
-                <InputText id="companyname" @bind-Value="JobOffer.CompanyName" class="form-control" aria-required="true" maxlength="50" ReadOnly="true" />
+                <InputText id="companyname" @bind-Value="JobOffer.CompanyName" class="form-control" aria-required="true" maxlength="500" ReadOnly="true" />
                 <ValidationMessage For="() => JobOffer.CompanyName" class="text-danger" />
             </div>
+            <div class="mb-3">
+                <label class="form-label">Branża</label>
+                <InputSelect class="form-select" @bind-Value="JobOffer.IndustryCategory">
+                    <option value="">-- wybierz branżę --</option>
+                    @foreach (IndustryCategory category in Enum.GetValues(typeof(IndustryCategory)))
+                    {
+                        if (category == IndustryCategory.None) continue;
+                        <option value="@category">@GetIndustryLabel(category)</option>
+                    }
+                </InputSelect>
+            </div>
+
             <div class="mb-3">
                 <label for="title" class="form-label">Tytuł stanowiska:</label>
                 <InputText id="title" @bind-Value="JobOffer.Title" class="form-control" aria-required="true" maxlength="80" />
@@ -124,6 +136,7 @@
                 <ValidationMessage For="() => JobOffer.Benefits" class="text-danger" />
             </div>
 
+
             <button type="submit" class="btn btn-primary" disabled="@(!isNipVerified)">Wyślij do weryfikacji</button>
         </EditForm>
     </div>
@@ -139,7 +152,33 @@
 
     private JobOffer JobOffer { get; set; } = new();
 
-
+    private string GetIndustryLabel(IndustryCategory category) => category switch
+    {
+        IndustryCategory.Sprzedaz => "Sprzedaż",
+        IndustryCategory.Marketing => "Marketing",
+        IndustryCategory.Finanse => "Finanse",
+        IndustryCategory.Bankowosc => "Bankowość",
+        IndustryCategory.ObslugaKlienta => "Obsługa klienta",
+        IndustryCategory.ZdrowieIUroda => "Zdrowie i uroda",
+        IndustryCategory.Gastronomia => "Gastronomia",
+        IndustryCategory.Turystyka => "Turystyka",
+        IndustryCategory.Zarzadzanie => "Zarządzanie",
+        IndustryCategory.PracaWSklepie => "Praca w sklepie",
+        IndustryCategory.Budownictwo => "Budownictwo",
+        IndustryCategory.Produkcja => "Produkcja",
+        IndustryCategory.Nieruchomosci => "Nieruchomości",
+        IndustryCategory.Edukacja => "Edukacja",
+        IndustryCategory.Logistyka => "Logistyka",
+        IndustryCategory.HR => "HR",
+        IndustryCategory.Design => "Design",
+        IndustryCategory.BIData => "BI & Data",
+        IndustryCategory.PracaBiurowa => "Praca biurowa",
+        IndustryCategory.Consulting => "Consulting",
+        IndustryCategory.Media => "Media",
+        IndustryCategory.Prawo => "Prawo",
+        IndustryCategory.IT => "IT",
+        _ => "Inne"
+    };
 
     private string today = DateTime.Now.ToString("yyyy-MM-dd");
 

@@ -27,6 +27,19 @@
                     }
                 </InputSelect>
             </div>
+            <div class="col-md-3">
+                <label for="industryFilter" class="form-label">Branża</label>
+                <InputSelect id="industryFilter"
+                             class="form-select"
+                             @bind-Value="selectedIndustryCategory">
+                    <option value="">Wszystkie branże</option>
+                    @foreach (var category in Enum.GetValues(typeof(IndustryCategory)).Cast<IndustryCategory>())
+                    {
+                        if (category == IndustryCategory.None) continue;
+                        <option value="@category">@GetIndustryLabel(category)</option>
+                    }
+                </InputSelect>
+            </div>
             <div class="col-md-6 col-lg-3">
                 <label for="jobTypeFilter" class="form-label">Tryb pracy</label>
                 <InputSelect id="jobTypeFilter" @bind-Value="jobTypeFilter" class="form-select">
@@ -128,6 +141,33 @@ else
 
     private JobType? jobTypeFilter;
 
+    private IndustryCategory? selectedIndustryCategory;
+
+    private string GetIndustryLabel(IndustryCategory category) => category switch
+    {
+        IndustryCategory.Sprzedaz => "Sprzedaż",
+        IndustryCategory.Marketing => "Marketing",
+        IndustryCategory.Finanse => "Finanse",
+        IndustryCategory.Bankowosc => "Bankowość",
+        IndustryCategory.ObslugaKlienta => "Obsługa klienta",
+        IndustryCategory.Gastronomia => "Gastronomia",
+        IndustryCategory.Turystyka => "Turystyka",
+        IndustryCategory.Zarzadzanie => "Zarządzanie",
+        IndustryCategory.PracaWSklepie => "Praca w sklepie",
+        IndustryCategory.Budownictwo => "Budownictwo",
+        IndustryCategory.Produkcja => "Produkcja",
+        IndustryCategory.Nieruchomosci => "Nieruchomości",
+        IndustryCategory.Edukacja => "Edukacja",
+        IndustryCategory.Logistyka => "Logistyka",
+        IndustryCategory.HR => "HR",
+        IndustryCategory.Design => "Design",
+        IndustryCategory.PracaBiurowa => "Praca biurowa",
+        IndustryCategory.Consulting => "Consulting",
+        IndustryCategory.Media => "Media",
+        IndustryCategory.Prawo => "Prawo",
+        IndustryCategory.IT => "IT",
+        _ => category.ToString()
+    };
 
 
     protected override async Task OnInitializedAsync()
@@ -174,7 +214,7 @@ else
 
     {
 
-        var offersFromService = await JobOfferService.GetJobOffersAsync(locationFilter, minSalaryFilter, sortBy, employmentTypeFilter, jobTypeFilter);
+        var offersFromService = await JobOfferService.GetJobOffersAsync(locationFilter, minSalaryFilter, sortBy, employmentTypeFilter, jobTypeFilter, selectedIndustryCategory);
 
 
 

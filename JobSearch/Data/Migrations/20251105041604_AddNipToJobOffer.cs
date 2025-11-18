@@ -41,8 +41,8 @@ namespace JobSearch.Migrations
             migrationBuilder.AlterColumn<string>(
                 name: "CompanyName",
                 table: "JobOffer",
-                type: "nvarchar(50)",
-                maxLength: 50,
+                type: "nvarchar(500)",
+                maxLength: 500,
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "nvarchar(150)",
@@ -109,8 +109,8 @@ namespace JobSearch.Migrations
                 maxLength: 150,
                 nullable: false,
                 oldClrType: typeof(string),
-                oldType: "nvarchar(50)",
-                oldMaxLength: 50);
+                oldType: "nvarchar(500)",
+                oldMaxLength: 500);
 
             migrationBuilder.AlterColumn<string>(
                 name: "Benefits",
