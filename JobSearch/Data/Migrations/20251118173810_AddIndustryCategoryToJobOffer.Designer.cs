@@ -4,6 +4,7 @@ using JobSearch.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace JobSearch.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251118173810_AddIndustryCategoryToJobOffer")]
+    partial class AddIndustryCategoryToJobOffer
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -351,9 +354,6 @@ namespace JobSearch.Migrations
                     b.Property<int>("IndustryCategory")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsOnlineRecruitment")
-                        .HasColumnType("bit");
-
                     b.Property<int>("JobType")
                         .HasColumnType("int");
 
@@ -374,18 +374,6 @@ namespace JobSearch.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("RequiresDisabilityCertificate")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("RequiresExperience")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("RequiresSanitaryBook")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("RequiresStudentStatus")
-                        .HasColumnType("bit");
 
                     b.Property<decimal?>("SalaryMax")
                         .HasColumnType("decimal(10,2)");

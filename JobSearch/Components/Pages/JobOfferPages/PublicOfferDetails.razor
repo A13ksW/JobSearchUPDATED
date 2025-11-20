@@ -54,8 +54,12 @@ else
                 <dt class="col-sm-3">Lokalizacja</dt>
                 <dd class="col-sm-9">@jobOffer.Location</dd>
 
+                <dt class="col-sm-3">Branża</dt>
+                <dd class="col-sm-9">@jobOffer.IndustryCategory</dd>
+
                 <dt class="col-sm-3">Wynagrodzenie</dt>
                 <dd class="col-sm-9">@jobOffer.SalaryRange</dd>
+
 
                 <dt class="col-sm-3">Rodzaj zatrudnienia</dt>
                 <dd class="col-sm-9">@jobOffer.EmplType</dd>
@@ -68,6 +72,29 @@ else
 
                 <dt class="col-sm-3">Wymagania</dt>
                 <dd class="col-sm-9">@((MarkupString)jobOffer.Requirements.Replace("\n", "<br />"))</dd>
+                <dt class="col-sm-4">Wymagane doświadczenie</dt>
+                <dd class="col-sm-8">@((jobOffer.RequiresExperience) ? "Tak" : "Nie")</dd>
+
+                <dt class="col-sm-4">Rekrutacja online</dt>
+                <dd class="col-sm-8">@((jobOffer.IsOnlineRecruitment) ? "Tak" : "Nie")</dd>
+
+                <dt class="col-sm-4">Specjalne wymagania</dt>
+                <dd class="col-sm-8">
+                    @{
+                        var specjalne = new List<string>();
+                        if (jobOffer.RequiresSanitaryBook) specjalne.Add("Książeczka sanepidowska");
+                        if (jobOffer.RequiresStudentStatus) specjalne.Add("Status studenta");
+                        if (jobOffer.RequiresDisabilityCertificate) specjalne.Add("Orzeczenie o niepełnosprawności");
+                    }
+                    @if (specjalne.Count == 0)
+                    {
+                        <span>Brak</span>
+                    }
+                    else
+                    {
+                        <span>@string.Join(", ", specjalne)</span>
+                    }
+                </dd>
 
                 @if (!string.IsNullOrEmpty(jobOffer.Benefits))
                 {

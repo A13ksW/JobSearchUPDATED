@@ -6,6 +6,8 @@
 @using Microsoft.AspNetCore.Identity
 @inject IJobOfferService JobOfferService
 @inject NavigationManager NavigationManager
+@inject IGeoLocationService GeoLocationService
+
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = "Admin,Moderator")]
 
@@ -61,6 +63,18 @@ else
                 </div>
 
                 <div class="mb-3">
+                    <label class="form-label">Branża</label>
+                    <InputSelect class="form-select" @bind-Value="JobOffer.IndustryCategory">
+                        <option value="">-- wybierz branżę --</option>
+                        @foreach (IndustryCategory category in Enum.GetValues(typeof(IndustryCategory)))
+                        {
+                            if (category == IndustryCategory.None) continue;
+                            <option value="@category">@GetIndustryLabel(category)</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
                     <label for="title" class="form-label">Title:</label>
                     <InputText id="title" @bind-Value="JobOffer.Title" class="form-control" aria-required="true" maxlength="80" />
                     <ValidationMessage For="() => JobOffer.Title" class="text-danger" />
@@ -71,8 +85,34 @@ else
                     <ValidationMessage For="() => JobOffer.Description" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="location" class="form-label">Location:</label>
-                    <InputText id="location" @bind-Value="JobOffer.Location" class="form-control" aria-required="true" maxlength="100" />
+                    <label for="offerLocation" class="form-label">Location:</label>
+
+                    <div class="position-relative">
+                        <input id="offerLocation"
+                               class="form-control"
+                               value="@JobOffer.Location"
+                               placeholder="np. Warszawa"
+                               maxlength="100"
+                               aria-required="true"
+                               @oninput="OnOfferLocationInput"
+                               @onfocus="ShowOfferLocationSuggestions"
+                               @onblur="HideOfferLocationSuggestionsDelayed" />
+
+                        @if (showOfferLocationSuggestions && offerLocationSuggestions.Any())
+                        {
+                            <ul class="list-group position-absolute w-100 shadow-sm"
+                                style="z-index:1000; max-height:250px; overflow-y:auto;">
+                                @foreach (var suggestion in offerLocationSuggestions)
+                                {
+                                    <li class="list-group-item list-group-item-action"
+                                        @onclick="@(() => SelectOfferLocationSuggestion(suggestion))">
+                                        @suggestion
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+
                     <ValidationMessage For="() => JobOffer.Location" class="text-danger" />
                 </div>
                 <div class="mb-3">
@@ -126,6 +166,61 @@ else
                     <ValidationMessage For="() => JobOffer.Requirements" class="text-danger" />
                 </div>
                 <div class="mb-3">
+                    <label class="form-label">Wymagane doświadczenie</label>
+                    <div class="form-check">
+                        <InputCheckbox id="requiresExperience"
+                                       class="form-check-input"
+                                       @bind-Value="JobOffer.RequiresExperience" />
+                        <label class="form-check-label" for="requiresExperience">
+                            Zaznacz, jeśli wymagane jest wcześniejsze doświadczenie
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Rekrutacja online</label>
+                    <div class="form-check">
+                        <InputCheckbox id="isOnlineRecruitment"
+                                       class="form-check-input"
+                                       @bind-Value="JobOffer.IsOnlineRecruitment" />
+                        <label class="form-check-label" for="isOnlineRecruitment">
+                            Zaznacz, jeśli proces rekrutacji odbywa się online
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Specjalne wymagania</label>
+
+                    <div class="form-check">
+                        <InputCheckbox id="requiresSanitaryBook"
+                                       class="form-check-input"
+                                       @bind-Value="JobOffer.RequiresSanitaryBook" />
+                        <label class="form-check-label" for="requiresSanitaryBook">
+                            Książeczka sanepidowska
+                        </label>
+                    </div>
+
+                    <div class="form-check">
+                        <InputCheckbox id="requiresStudentStatus"
+                                       class="form-check-input"
+                                       @bind-Value="JobOffer.RequiresStudentStatus" />
+                        <label class="form-check-label" for="requiresStudentStatus">
+                            Status studenta
+                        </label>
+                    </div>
+
+                    <div class="form-check">
+                        <InputCheckbox id="requiresDisabilityCertificate"
+                                       class="form-check-input"
+                                       @bind-Value="JobOffer.RequiresDisabilityCertificate" />
+                        <label class="form-check-label" for="requiresDisabilityCertificate">
+                            Orzeczenie o niepełnosprawności
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mb-3">
                     <label for="benefits" class="form-label">Benefits:</label>
                     <InputText id="benefits" @bind-Value="JobOffer.Benefits" class="form-control" maxlength="200" />
                     <ValidationMessage For="() => JobOffer.Benefits" class="text-danger" />
@@ -151,7 +246,33 @@ else
 
     private JobOffer? JobOffer { get; set; }
 
-
+    private string GetIndustryLabel(IndustryCategory category) => category switch
+    {
+        IndustryCategory.Sprzedaz => "Sprzedaż",
+        IndustryCategory.Marketing => "Marketing",
+        IndustryCategory.Finanse => "Finanse",
+        IndustryCategory.Bankowosc => "Bankowość",
+        IndustryCategory.ObslugaKlienta => "Obsługa klienta",
+        IndustryCategory.ZdrowieIUroda => "Zdrowie i uroda",
+        IndustryCategory.Gastronomia => "Gastronomia",
+        IndustryCategory.Turystyka => "Turystyka",
+        IndustryCategory.Zarzadzanie => "Zarządzanie",
+        IndustryCategory.PracaWSklepie => "Praca w sklepie",
+        IndustryCategory.Budownictwo => "Budownictwo",
+        IndustryCategory.Produkcja => "Produkcja",
+        IndustryCategory.Nieruchomosci => "Nieruchomości",
+        IndustryCategory.Edukacja => "Edukacja",
+        IndustryCategory.Logistyka => "Logistyka",
+        IndustryCategory.HR => "HR",
+        IndustryCategory.Design => "Design",
+        IndustryCategory.BIData => "BI & Data",
+        IndustryCategory.PracaBiurowa => "Praca biurowa",
+        IndustryCategory.Consulting => "Consulting",
+        IndustryCategory.Media => "Media",
+        IndustryCategory.Prawo => "Prawo",
+        IndustryCategory.IT => "IT",
+        _ => "Inne"
+    };
 
     private string today = DateTime.Now.ToString("yyyy-MM-dd");
 
@@ -170,6 +291,57 @@ else
     }
 
 
+    private List<string> offerLocationSuggestions = new();
+    private bool showOfferLocationSuggestions = false;
+
+    private async Task OnOfferLocationInput(ChangeEventArgs e)
+    {
+        var text = e.Value?.ToString() ?? string.Empty;
+        if (JobOffer is not null)
+        {
+            JobOffer.Location = text;
+        }
+
+        if (!string.IsNullOrWhiteSpace(text) && text.Length >= 2)
+        {
+            var suggestions = await GeoLocationService.SuggestLocationsAsync(text, 20);
+            offerLocationSuggestions = suggestions
+                .Select(s => s.DisplayName)
+                .Distinct()
+                .ToList();
+
+            showOfferLocationSuggestions = offerLocationSuggestions.Any();
+        }
+        else
+        {
+            offerLocationSuggestions.Clear();
+            showOfferLocationSuggestions = false;
+        }
+    }
+
+    private void ShowOfferLocationSuggestions()
+    {
+        if (offerLocationSuggestions.Any())
+        {
+            showOfferLocationSuggestions = true;
+        }
+    }
+
+    private async Task HideOfferLocationSuggestionsDelayed()
+    {
+        await Task.Delay(150);
+        showOfferLocationSuggestions = false;
+        StateHasChanged();
+    }
+
+    private void SelectOfferLocationSuggestion(string suggestion)
+    {
+        if (JobOffer is not null)
+        {
+            JobOffer.Location = suggestion;
+        }
+        showOfferLocationSuggestions = false;
+    }
 
     private async Task UpdateJobOffer()
 
