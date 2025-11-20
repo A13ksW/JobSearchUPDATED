@@ -3,21 +3,45 @@
 @using JobSearch.Data
 @using JobSearch.Services
 @inject IJobOfferService JobOfferService
+@inject IGeoLocationService GeoLocationService
 
 <PageTitle>Oferty Pracy</PageTitle>
 
 <h1>Przeglądaj Oferty Pracy</h1>
 
 <div class="card mb-4">
-    <div class="card-body">
-        <h5 class="card-title">Filtruj i sortuj</h5>
+   <div class="card-body">
+    <h5 class="card-title">Filtruj i sortuj</h5>
 
-        <!-- PODSTAWOWE FILTRY -->
-        <div class="row g-3">
-            <div class="col-md-6 col-lg-3">
-                <label for="locationFilter" class="form-label">Lokalizacja</label>
-                <input id="locationFilter" @bind="locationFilter" class="form-control" placeholder="np. Warszawa" />
+        <div class="col-md-6 col-lg-3">
+            <label for="locationFilter" class="form-label">Lokalizacja</label>
+
+            <div class="position-relative">
+                <input id="locationFilter"
+                       class="form-control"
+                       value="@locationFilter"
+                       placeholder="np. Warszawa"
+                       @oninput="OnLocationInput"
+                       @onfocus="ShowLocationSuggestions"
+                       @onblur="HideLocationSuggestionsDelayed" />
+
+                @if (showLocationSuggestions && locationSuggestions.Any())
+                {
+                    <ul class="list-group position-absolute w-100 shadow-sm"
+                        style="z-index:1000; max-height:250px; overflow-y:auto;">
+                        @foreach (var suggestion in locationSuggestions)
+                        {
+                            <li class="list-group-item list-group-item-action"
+                                @onclick="@(() => SelectLocationSuggestion(suggestion))">
+                                @suggestion
+                            </li>
+                        }
+                    </ul>
+                }
             </div>
+        </div>
+
+
 
             <div class="col-md-6 col-lg-3">
                 <label for="employmentTypeFilter" class="form-label">Rodzaj zatrudnienia</label>
@@ -146,29 +170,19 @@
             </div>
         }
     </div>
-</div>
-
-
-         
 
 @if (jobOffers == null)
-
 {
     <p><em>Ładowanie...</em></p>
 }
-
 else if (!jobOffers.Any())
-
 {
     <div class="alert alert-info">Brak ofert pracy spełniających podane kryteria.</div>
 }
-
 else
-
 {
     <div class="row row-cols-1 row-cols-md-2 g-4">
         @foreach (var offer in jobOffers)
-
         {
             <div class="col">
                 <div class="card h-100">
@@ -204,19 +218,69 @@ else
 @code {
     private List<JobOffer>? jobOffers;
 
-
-
     private string? locationFilter;
+    private List<string> locationSuggestions = new();
+    private bool showLocationSuggestions = false;
 
+    private async Task OnLocationInput(ChangeEventArgs e)
+    {
+        var text = e.Value?.ToString() ?? string.Empty;
+        locationFilter = text;
+
+        if (!string.IsNullOrWhiteSpace(text) && text.Length >= 2)
+        {
+            var suggestions = await GeoLocationService.SuggestLocationsAsync(text, 20);
+            locationSuggestions = suggestions
+                .Select(s => s.DisplayName)
+                .Distinct()
+                .ToList();
+
+            showLocationSuggestions = locationSuggestions.Any();
+        }
+        else
+        {
+            locationSuggestions.Clear();
+            showLocationSuggestions = false;
+        }
+    }
+
+    private void ShowLocationSuggestions()
+    {
+        if (locationSuggestions.Any())
+        {
+            showLocationSuggestions = true;
+        }
+    }
+
+    private async Task HideLocationSuggestionsDelayed()
+    {
+        // małe opóźnienie, żeby kliknięcie w listę zdążyło się wykonać
+        await Task.Delay(150);
+        showLocationSuggestions = false;
+        StateHasChanged();
+    }
+
+    private void SelectLocationSuggestion(string suggestion)
+    {
+        locationFilter = suggestion;
+        showLocationSuggestions = false;
+        // od razu możesz przefiltrować, jeśli chcesz:
+        // _ = ApplyFilters();
+    }
     private decimal? minSalaryFilter;
-
     private string sortBy = "date_desc";
 
     private EmploymentType? employmentTypeFilter;
-
     private JobType? jobTypeFilter;
-
     private IndustryCategory? selectedIndustryCategory;
+
+    private bool onlyWithExperience;
+    private bool onlyOnlineRecruitment;
+    private bool onlyWithSanitaryBook;
+    private bool onlyWithStudentStatus;
+    private bool onlyWithDisabilityCertificate;
+
+    private bool showAdvancedFilters = false;
 
     private string GetIndustryLabel(IndustryCategory category) => category switch
     {
@@ -243,52 +307,30 @@ else
         IndustryCategory.IT => "IT",
         _ => category.ToString()
     };
-    private bool onlyWithExperience;
-    private bool onlyOnlineRecruitment;
-    private bool onlyWithSanitaryBook;
-    private bool onlyWithStudentStatus;
-    private bool onlyWithDisabilityCertificate;
-
-    private bool showAdvancedFilters = false;
 
     private void ToggleAdvancedFilters()
     {
         showAdvancedFilters = !showAdvancedFilters;
     }
 
-
     protected override async Task OnInitializedAsync()
-
     {
-
         await LoadOffers();
-
     }
-
-
 
     private async Task ApplyFilters()
-
     {
-
         await LoadOffers();
-
     }
 
-
-
     private async Task ClearFilters()
-
     {
-
         locationFilter = null;
+        locationSuggestions.Clear();
 
         minSalaryFilter = null;
-
         employmentTypeFilter = null;
-
         jobTypeFilter = null;
-
         selectedIndustryCategory = null;
 
         onlyWithExperience = false;
@@ -300,28 +342,31 @@ else
         sortBy = "date_desc";
 
         await LoadOffers();
-
     }
-
-
 
     private async Task LoadOffers()
-
     {
-
-        var allOffers = await JobOfferService.GetJobOffersAsync(locationFilter, minSalaryFilter, sortBy, employmentTypeFilter, jobTypeFilter, selectedIndustryCategory, onlyWithExperience, onlyOnlineRecruitment, onlyWithSanitaryBook, onlyWithStudentStatus, onlyWithDisabilityCertificate);
-
-
+        var allOffers = await JobOfferService.GetJobOffersAsync(
+            locationFilter,
+            minSalaryFilter,
+            sortBy,
+            employmentTypeFilter,
+            jobTypeFilter,
+            selectedIndustryCategory,
+            onlyWithExperience,
+            onlyOnlineRecruitment,
+            onlyWithSanitaryBook,
+            onlyWithStudentStatus,
+            onlyWithDisabilityCertificate
+           
+        );
 
         jobOffers = allOffers
-
             .Where(o => o.Status == OfferStatus.Opublikowana)
-
             .ToList();
 
-
-
         StateHasChanged();
-
     }
+
+  
 }

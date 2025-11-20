@@ -4,6 +4,7 @@
 @using JobSearch.Services
 @using Microsoft.AspNetCore.Authorization
 @inject IJobOfferService JobOfferService
+@inject IGeoLocationService GeoLocationService
 @attribute [Authorize(Roles = "Admin,Moderator")]
 
 <PageTitle>Panel Moderacji Ofert</PageTitle>
@@ -18,11 +19,33 @@
     <h5 class="card-title">Filtruj i sortuj</h5>
 
     <!-- PODSTAWOWE FILTRY -->
-    <div class="row g-3">
-        <div class="col-md-6 col-lg-3">
-            <label for="locationFilter" class="form-label">Lokalizacja</label>
-            <input id="locationFilter" @bind="locationFilter" class="form-control" placeholder="np. Warszawa" />
+    <div class="col-md-6 col-lg-3">
+        <label for="locationFilter" class="form-label">Lokalizacja</label>
+
+        <div class="position-relative">
+            <input id="locationFilter"
+                   class="form-control"
+                   value="@locationFilter"
+                   placeholder="np. Warszawa"
+                   @oninput="OnLocationInput"
+                   @onfocus="ShowLocationSuggestions"
+                   @onblur="HideLocationSuggestionsDelayed" />
+
+            @if (showLocationSuggestions && locationSuggestions.Any())
+            {
+                <ul class="list-group position-absolute w-100 shadow-sm"
+                    style="z-index:1000; max-height:250px; overflow-y:auto;">
+                    @foreach (var suggestion in locationSuggestions)
+                    {
+                        <li class="list-group-item list-group-item-action"
+                            @onclick="@(() => SelectLocationSuggestion(suggestion))">
+                            @suggestion
+                        </li>
+                    }
+                </ul>
+            }
         </div>
+    
 
         <div class="col-md-6 col-lg-3">
             <label for="employmentTypeFilter" class="form-label">Rodzaj zatrudnienia</label>
@@ -281,6 +304,55 @@ else
     private bool onlyWithDisabilityCertificate;
     private bool showAdvancedFilters = false;
 
+    private List<string> locationSuggestions = new();
+    private bool showLocationSuggestions = false;
+
+    private async Task OnLocationInput(ChangeEventArgs e)
+    {
+        var text = e.Value?.ToString() ?? string.Empty;
+        locationFilter = text;
+
+        if (!string.IsNullOrWhiteSpace(text) && text.Length >= 2)
+        {
+            var suggestions = await GeoLocationService.SuggestLocationsAsync(text, 20);
+            locationSuggestions = suggestions
+                .Select(s => s.DisplayName)
+                .Distinct()
+                .ToList();
+
+            showLocationSuggestions = locationSuggestions.Any();
+        }
+        else
+        {
+            locationSuggestions.Clear();
+            showLocationSuggestions = false;
+        }
+    }
+
+    private void ShowLocationSuggestions()
+    {
+        if (locationSuggestions.Any())
+        {
+            showLocationSuggestions = true;
+        }
+    }
+
+    private async Task HideLocationSuggestionsDelayed()
+    {
+        await Task.Delay(150); // żeby kliknięcie w listę zdążyło się wykonać
+        showLocationSuggestions = false;
+        StateHasChanged();
+    }
+
+    private void SelectLocationSuggestion(string suggestion)
+    {
+        locationFilter = suggestion;
+        showLocationSuggestions = false;
+        // opcjonalnie od razu zastosuj filtr:
+        // _ = ApplyFilters();
+    }
+
+
     private void ToggleAdvancedFilters()
     {
         showAdvancedFilters = !showAdvancedFilters;
@@ -331,6 +403,8 @@ else
         onlyWithSanitaryBook = false;
         onlyWithStudentStatus = false;
         onlyWithDisabilityCertificate = false;
+        locationSuggestions.Clear();
+        showLocationSuggestions = false;
 
         statusFilter = OfferStatus.Weryfikacja;
 

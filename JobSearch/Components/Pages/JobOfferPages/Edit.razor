@@ -6,6 +6,8 @@
 @using Microsoft.AspNetCore.Identity
 @inject IJobOfferService JobOfferService
 @inject NavigationManager NavigationManager
+@inject IGeoLocationService GeoLocationService
+
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = "Admin,Moderator")]
 
@@ -83,8 +85,34 @@ else
                     <ValidationMessage For="() => JobOffer.Description" class="text-danger" />
                 </div>
                 <div class="mb-3">
-                    <label for="location" class="form-label">Location:</label>
-                    <InputText id="location" @bind-Value="JobOffer.Location" class="form-control" aria-required="true" maxlength="100" />
+                    <label for="offerLocation" class="form-label">Location:</label>
+
+                    <div class="position-relative">
+                        <input id="offerLocation"
+                               class="form-control"
+                               value="@JobOffer.Location"
+                               placeholder="np. Warszawa"
+                               maxlength="100"
+                               aria-required="true"
+                               @oninput="OnOfferLocationInput"
+                               @onfocus="ShowOfferLocationSuggestions"
+                               @onblur="HideOfferLocationSuggestionsDelayed" />
+
+                        @if (showOfferLocationSuggestions && offerLocationSuggestions.Any())
+                        {
+                            <ul class="list-group position-absolute w-100 shadow-sm"
+                                style="z-index:1000; max-height:250px; overflow-y:auto;">
+                                @foreach (var suggestion in offerLocationSuggestions)
+                                {
+                                    <li class="list-group-item list-group-item-action"
+                                        @onclick="@(() => SelectOfferLocationSuggestion(suggestion))">
+                                        @suggestion
+                                    </li>
+                                }
+                            </ul>
+                        }
+                    </div>
+
                     <ValidationMessage For="() => JobOffer.Location" class="text-danger" />
                 </div>
                 <div class="mb-3">
@@ -263,6 +291,57 @@ else
     }
 
 
+    private List<string> offerLocationSuggestions = new();
+    private bool showOfferLocationSuggestions = false;
+
+    private async Task OnOfferLocationInput(ChangeEventArgs e)
+    {
+        var text = e.Value?.ToString() ?? string.Empty;
+        if (JobOffer is not null)
+        {
+            JobOffer.Location = text;
+        }
+
+        if (!string.IsNullOrWhiteSpace(text) && text.Length >= 2)
+        {
+            var suggestions = await GeoLocationService.SuggestLocationsAsync(text, 20);
+            offerLocationSuggestions = suggestions
+                .Select(s => s.DisplayName)
+                .Distinct()
+                .ToList();
+
+            showOfferLocationSuggestions = offerLocationSuggestions.Any();
+        }
+        else
+        {
+            offerLocationSuggestions.Clear();
+            showOfferLocationSuggestions = false;
+        }
+    }
+
+    private void ShowOfferLocationSuggestions()
+    {
+        if (offerLocationSuggestions.Any())
+        {
+            showOfferLocationSuggestions = true;
+        }
+    }
+
+    private async Task HideOfferLocationSuggestionsDelayed()
+    {
+        await Task.Delay(150);
+        showOfferLocationSuggestions = false;
+        StateHasChanged();
+    }
+
+    private void SelectOfferLocationSuggestion(string suggestion)
+    {
+        if (JobOffer is not null)
+        {
+            JobOffer.Location = suggestion;
+        }
+        showOfferLocationSuggestions = false;
+    }
 
     private async Task UpdateJobOffer()
 
