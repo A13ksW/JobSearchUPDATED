@@ -11,19 +11,25 @@
 
 <h1>Użytkownicy</h1>
 
-<input @bind="search" placeholder="Szukaj email/nazwa" />
-<button @onclick="Load">Szukaj</button>
-<button @onclick="Create">Dodaj</button>
+<div class="row mb-3">
+    <div class="col-md-6">
+        <div class="input-group">
+            <input @bind="search" class="form-control" placeholder="Szukaj email/nazwa" aria-label="Szukaj email lub nazwa" />
+            <button class="btn btn-success" @onclick="Load" type="button">Szukaj</button>
+            <button class="btn btn-primary" @onclick="Create" type="button">Dodaj</button>
+        </div>
+    </div>
+</div>
 
-<table>
-    <thead>
+<table class="table table-striped table-hover">
+    <thead class="table-light">
         <tr>
             <th>Email</th>
             <th>Nazwa</th>
             <th>Typ konta</th>
             <th>Role</th>
             <th>Status</th>
-            <th></th>
+            <th class="text-end">Akcje</th>
         </tr>
     </thead>
     <tbody>
@@ -34,10 +40,19 @@
                 <td>@u.DisplayName</td>
                 <td>@u.AccountType</td>
                 <td>@string.Join(", ", u.Roles)</td>
-                <td>@(u.LockoutEnd.HasValue && u.LockoutEnd > DateTimeOffset.UtcNow ? "Zablokowany" : "Aktywny")</td>
                 <td>
-                    <button @onclick="() => Edit(u.Id)">Edytuj</button>
-                    <button @onclick="() => Delete(u.Id)">Usuń</button>
+                    @if (u.LockoutEnd.HasValue && u.LockoutEnd > DateTimeOffset.UtcNow)
+                    {
+                        <span class="badge bg-danger">Zablokowany</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-success">Aktywny</span>
+                    }
+                </td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-secondary me-1" @onclick="() => Edit(u.Id)">Edytuj</button>
+                    <button class="btn btn-sm btn-danger" @onclick="() => Delete(u.Id)">Usuń</button>
                 </td>
             </tr>
         }
@@ -85,4 +100,3 @@
         public DateTimeOffset? LockoutEnd { get; set; }
     }
 }
-

@@ -64,23 +64,19 @@
 
 
 @if (jobOffers == null)
-
 {
     <p><em>Ładowanie...</em></p>
 }
 
 else if (!jobOffers.Any())
-
 {
     <div class="alert alert-info">Brak ofert pracy spełniających podane kryteria.</div>
 }
 
 else
-
 {
     <div class="row row-cols-1 row-cols-md-2 g-4">
         @foreach (var offer in jobOffers)
-
         {
             <div class="col">
                 <div class="card h-100">
@@ -115,20 +111,11 @@ else
 
 @code {
     private List<JobOffer>? jobOffers;
-
-
-
     private string? locationFilter;
-
     private decimal? minSalaryFilter;
-
     private string sortBy = "date_desc";
-
     private EmploymentType? employmentTypeFilter;
-
     private JobType? jobTypeFilter;
-
-
 
     protected override async Task OnInitializedAsync()
 
@@ -138,8 +125,6 @@ else
 
     }
 
-
-
     private async Task ApplyFilters()
 
     {
@@ -148,45 +133,22 @@ else
 
     }
 
-
-
     private async Task ClearFilters()
-
     {
-
         locationFilter = null;
-
         minSalaryFilter = null;
-
         employmentTypeFilter = null;
-
         jobTypeFilter = null;
-
         sortBy = "date_desc";
-
         await LoadOffers();
-
     }
 
-
-
     private async Task LoadOffers()
-
     {
-
         var offersFromService = await JobOfferService.GetJobOffersAsync(locationFilter, minSalaryFilter, sortBy, employmentTypeFilter, jobTypeFilter);
-
-
-
         jobOffers = offersFromService
-
             .Where(o => o.Status == OfferStatus.Opublikowana)
-
             .ToList();
-
-
-
         StateHasChanged();
-
     }
 }

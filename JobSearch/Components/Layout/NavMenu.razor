@@ -36,13 +36,6 @@
             </div>
         </AuthorizeView>
 
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="auth">
-                <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
-            </NavLink>
-        </div>
-
         <AuthorizeView>
             <Authorized>
 
@@ -104,43 +97,25 @@
 </div>
 
 @code {
-    private string? currentUrl;
 
+    private string? currentUrl;
     private bool hasExternalLogins;
 
-
-
     protected override async Task OnInitializedAsync()
-
     {
-
         currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
-
         NavigationManager.LocationChanged += OnLocationChanged;
-
         hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
-
     }
-
-
 
     private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
-
     {
-
         currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
-
         StateHasChanged();
-
     }
 
-
-
     public void Dispose()
-
     {
-
         NavigationManager.LocationChanged -= OnLocationChanged;
-
     }
 }
