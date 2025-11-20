@@ -91,49 +91,23 @@
 @code {
     private JobOffer? joboffer;
 
-
-
-    // --- POPRAWKA TUTAJ ---
-
-    // Zmieniamy [SupplyParameterFromQuery] na [Parameter], aby pobrać ID z trasy "/delete/2"
-
     [Parameter]
 
     public int Id { get; set; }
-
-
-
     private bool busy;
 
-
-
     protected override async Task OnParametersSetAsync()
-
     {
-
-        // Teraz 'Id' zostanie poprawnie pobrane z trasy URL
-
         joboffer = await JobOfferService.GetByIdAsync(Id);
-
         if (joboffer is null)
-
             NavigationManager.NavigateTo("/joboffers");
-
     }
 
-
-
     private async Task DeleteJobOffer()
-
     {
-
         if (joboffer is null) return;
-
         busy = true;
-
         await JobOfferService.DeleteAsync(joboffer.Id);
-
         NavigationManager.NavigateTo("/joboffers");
-
     }
 }
